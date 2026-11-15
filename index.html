@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="法官助理工作台">
+<meta name="theme-color" content="#1b3a5c">
+<title>法官助理工作台</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+:root{
+  --ink:#1b3a5c; --ink-2:#2c5c8f; --bg:#f2f4f7; --card:#fff;
+  --line:#e3e7ee; --text:#1d2733; --sub:#6b7787;
+  --red:#c62f2f; --red-bg:#fdecec; --orange:#b26800; --orange-bg:#fff5e3;
+  --green:#1f7a4d; --green-bg:#e9f6ef; --blue-bg:#eaf2fb;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg); color:var(--text); font-size:16px; line-height:1.5;
+  -webkit-text-size-adjust:100%; overscroll-behavior-y:none;
+}
+/* ---------- 框架 ---------- */
+.app{max-width:780px;margin:0 auto;min-height:100vh;background:var(--bg)}
+.hd{
+  position:sticky;top:0;z-index:50;background:var(--ink);color:#fff;
+  padding:calc(10px + var(--sat)) 16px 10px;
+}
+.hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hd h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.5px}
+.hd .date{font-size:12px;opacity:.78;margin-top:2px}
+.hd .wk{font-size:12px;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.main{padding:14px 14px calc(80px + var(--sab));}
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:rgba(255,255,255,.97); backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  display:flex; padding-bottom:var(--sab); max-width:780px; margin:0 auto;
+}
+.tabbar button{
+  flex:1;border:0;background:none;padding:7px 0 8px;font-size:11px;color:var(--sub);
+  display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;cursor:pointer;
+}
+.tabbar button .ico{font-size:20px;line-height:1;font-variation-settings:'wght' 400}
+.tabbar button.on{color:var(--ink);font-weight:600}
+.tabbar button.on .ico{transform:translateY(-1px)}
+.tabbar .plus .ico{
+  width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:300;
+  margin-top:-14px;box-shadow:0 3px 10px rgba(27,58,92,.35);line-height:1;
+}
+/* ---------- 通用 ---------- */
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+.card.tight{padding:0;overflow:hidden}
+.sec-t{display:flex;align-items:center;gap:8px;margin:18px 2px 10px;font-size:13px;color:var(--sub);font-weight:600;letter-spacing:.3px}
+.sec-t .n{background:var(--line);color:var(--sub);border-radius:20px;padding:0 7px;font-size:11px;line-height:18px}
+.sec-t .n.hot{background:var(--red);color:#fff}
+.sec-t .n.warm{background:var(--orange);color:#fff}
+.empty{text-align:center;color:var(--sub);font-size:14px;padding:36px 10px;line-height:1.9}
+.empty .big{font-size:34px;display:block;margin-bottom:8px;opacity:.35}
+.btn{
+  border:0;border-radius:9px;padding:11px 16px;font-size:15px;font-family:inherit;
+  background:var(--ink);color:#fff;font-weight:500;cursor:pointer;
+}
+.btn:active{opacity:.82}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid #c7d2e0}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:7px}
+.btn.danger{background:#fff;color:var(--red);border:1px solid #edc9c9}
+.btn.block{width:100%;display:block}
+.btn-row{display:flex;gap:9px}
+.btn-row .btn{flex:1}
+/* ---------- 任务条目 ---------- */
+.task{padding:13px 14px;border-bottom:1px solid var(--line);position:relative}
+.task:last-child{border-bottom:0}
+.task.od{background:linear-gradient(90deg,var(--red-bg),#fff 55%)}
+.task.td{background:linear-gradient(90deg,var(--orange-bg),#fff 55%)}
+.task .l1{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
+.task .cs{font-size:15px;font-weight:600;letter-spacing:.2px;word-break:break-all}
+.task .cname{font-size:13px;color:var(--sub);margin-top:3px}
+.task .l2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center;font-size:12px}
+.tag{padding:2px 8px;border-radius:5px;font-size:11.5px;background:var(--blue-bg);color:var(--ink-2);white-space:nowrap}
+.tag.cat{background:#eef1f6;color:#43536b}
+.tag.due{background:var(--orange-bg);color:var(--orange);font-weight:600}
+.tag.od{background:var(--red-bg);color:var(--red);font-weight:600}
+.tag.ok{background:var(--green-bg);color:var(--green)}
+.tag.wk{background:#f0edf9;color:#5b46a8}
+.task .step{font-size:13.5px;margin-top:7px;color:#33414f}
+.task .step b{font-weight:600}
+.task .acts{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.chk{
+  border:0;background:var(--green-bg);color:var(--green);border-radius:7px;padding:6px 12px;
+  font-size:13.5px;font-family:inherit;font-weight:500;cursor:pointer;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.chk:active{opacity:.75}
+/* ---------- 表单 ---------- */
+.field{margin-bottom:13px}
+.field label{display:block;font-size:13px;color:var(--sub);margin-bottom:5px;font-weight:500}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 12px;font-size:16px;font-family:inherit;color:var(--text);
+  border:1px solid #d3dae5;border-radius:9px;background:#fff;outline:none;
+  -webkit-appearance:none;appearance:none;
+}
+.field select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%236b7787' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink-2);box-shadow:0 0 0 3px rgba(44,92,143,.1)}
+.field .hint{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.5}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1;min-width:0}
+/* ---------- 弹层 ---------- */
+.sheet-mask{position:fixed;inset:0;background:rgba(15,25,38,.42);z-index:100;display:none;opacity:0;transition:opacity .2s}
+.sheet-mask.on{display:block;opacity:1}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:101;background:#f7f8fa;border-radius:16px 16px 0 0;
+  max-height:92vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+  max-width:780px;margin:0 auto;
+}
+.sheet.on{transform:translateY(0)}
+.sheet-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 10px 10px 16px;border-bottom:1px solid var(--line);flex:0 0 auto;background:#fff;border-radius:16px 16px 0 0;position:relative;z-index:10}
+.sheet-hd h2{margin:0;font-size:16px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-hd .x{
+  border:0;background:#f0f2f6;color:#4a5a70;border-radius:50%;
+  width:40px;height:40px;min-width:40px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;cursor:pointer;-webkit-appearance:none;
+  padding:0;position:relative;z-index:11;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.sheet-hd .x:active{background:#e2e7ef}
+.label-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.label-row label{display:block;font-size:13px;color:var(--sub);margin:0;font-weight:500}
+.sheet-bd{overflow-y:auto;padding:14px 16px;flex:1 1 auto;overscroll-behavior:contain;-webkit-overflow-scrolling:auto}
+.sheet-ft{padding:10px 16px calc(10px + var(--sab));border-top:1px solid var(--line);background:#fff;flex:0 0 auto}
+/* ---------- 台账表格 ---------- */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:11px;border:1px solid var(--line);background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:100%}
+th{background:#f0f3f8;color:#44536a;font-weight:600;text-align:left;padding:9px 10px;white-space:nowrap;font-size:12.5px;border-bottom:1px solid var(--line);position:sticky;top:0}
+td{padding:9px 10px;border-bottom:1px solid #eef1f5;white-space:nowrap;vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.wrap{white-space:normal;min-width:120px}
+/* ---------- 分类选择 ---------- */
+.cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.chip{
+  border:1px solid #d3dae5;background:#fff;border-radius:8px;padding:8px 12px;font-size:13.5px;
+  font-family:inherit;color:#3a4757;cursor:pointer;line-height:1.2;
+}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
+.chip.sm{padding:6px 10px;font-size:12.5px}
+/* ---------- 语音输入 ---------- */
+.mic{
+  border:1px solid #cdd8e6;background:#fff;color:var(--ink-2);border-radius:8px;
+  padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;line-height:1.3;
+  min-height:38px;min-width:76px;flex-shrink:0;-webkit-appearance:none;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.mic:active{opacity:.7}
+.mic.rec{background:var(--red);color:#fff;border-color:var(--red);animation:micpulse 1.1s ease-in-out infinite}
+@keyframes micpulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mic-row{display:flex;gap:8px;margin-top:9px}
+.mic-row .mic{flex:1 1 auto;min-height:44px;font-size:14.5px;background:var(--blue-bg);border-color:#b9cde6}
+.dict-tip{
+  margin-top:8px;background:var(--blue-bg);border:1px dashed #b9cde6;border-radius:8px;
+  padding:9px 11px;font-size:12.5px;color:#2a4a70;line-height:1.65;
+}
+/* ---------- 今日概览 ---------- */
+.ov{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.ov .cell{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 6px;text-align:center}
+.ov .v{font-size:20px;font-weight:700;line-height:1.15;letter-spacing:-.5px}
+.ov .k{font-size:11px;color:var(--sub);margin-top:3px}
+.ov .cell.r .v{color:var(--red)} .ov .cell.o .v{color:var(--orange)} .ov .cell.g .v{color:var(--green)}
+/* ---------- 时间轴 ---------- */
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:#dfe5ee}
+.tl .nd{position:relative;padding:0 0 16px}
+.tl .nd:last-child{padding-bottom:0}
+.tl .nd::before{content:'';position:absolute;left:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #b9c5d6}
+.tl .nd.done::before{background:var(--green);border-color:var(--green)}
+.tl .nd.now::before{background:var(--orange);border-color:var(--orange);box-shadow:0 0 0 4px rgba(178,104,0,.14)}
+.tl .nd .nm{font-size:14px;font-weight:600}
+.tl .nd.done .nm{color:var(--sub);text-decoration:line-through;font-weight:500}
+.tl .nd .dt{font-size:12.5px;color:var(--sub);margin-top:2px}
+/* ---------- 提示 ---------- */
+.toast{
+  position:fixed;left:50%;bottom:calc(90px + var(--sab));transform:translate(-50%,12px);
+  background:rgba(28,40,55,.94);color:#fff;padding:10px 18px;border-radius:22px;font-size:14px;
+  z-index:200;opacity:0;transition:.24s;pointer-events:none;max-width:86vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.note{background:var(--blue-bg);border-left:3px solid var(--ink-2);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;color:#2a4a70;line-height:1.65;margin-bottom:12px}
+.note.warn{background:var(--orange-bg);border-left-color:var(--orange);color:#7a4a00}
+.note b{font-weight:600}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;background:#eef1f6;color:#4a5a70;margin:0 5px 5px 0}
+.seg{display:flex;background:#e6eaf1;border-radius:9px;padding:3px;gap:2px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;padding:8px 4px;font-size:13.5px;font-family:inherit;color:#4a5a70;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+.srch{position:relative;margin-bottom:12px}
+.srch input{width:100%;padding:11px 12px 11px 36px;font-size:16px;border-radius:10px;border:1px solid #d3dae5;background:#fff;font-family:inherit;outline:none}
+.srch::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.5}
+.stat-line{display:flex;gap:14px;font-size:12.5px;color:var(--sub);padding:9px 14px;background:#fafbfd;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.stat-line b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hd">
+    <div class="hd-row">
+      <div>
+        <h1 id="hTitle">今日工作台</h1>
+        <div class="date" id="hDate"></div>
+      </div>
+      <div class="wk" id="hWeek"></div>
+    </div>
+  </header>
+  <main class="main" id="view"></main>
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="today" class="on"><span class="ico">☰</span>今日</button>
+    <button data-tab="tasks"><span class="ico">▤</span>任务</button>
+    <button data-tab="add" class="plus"><span class="ico">+</span></button>
+    <button data-tab="board"><span class="ico">▦</span>台账</button>
+    <button data-tab="set"><span class="ico">⚙</span>设置</button>
+  </nav>
+</div>
+
+<div class="sheet-mask" id="mask"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-hd"><h2 id="sheetTitle">录入任务</h2><button class="x" id="sheetX">✕</button></div>
+  <div class="sheet-bd" id="sheetBody"></div>
+  <div class="sheet-ft" id="sheetFoot"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   法官助理工作台  —  单文件离线应用
+   数据全部保存在本机浏览器 (localStorage)
+   ============================================================ */
+'use strict';
+/* ========== 1. 日期工具 ========== */
+const pad = n => (n < 10 ? '0' : '') + n;
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseYmd = s => { const p = String(s).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+const todayStr = () => ymd(new Date());
+const WEEKCN = ['日', '一', '二', '三', '四', '五', '六'];
+
+/* ========== 2. 法定节假日（2026年国办发明电〔2025〕7号） ========== */
+const DEFAULT_HOLIDAYS = {
+  '2026-01-01': '元旦', '2026-01-02': '元旦', '2026-01-03': '元旦',
+  '2026-02-15': '春节', '2026-02-16': '春节', '2026-02-17': '春节', '2026-02-18': '春节',
+  '2026-02-19': '春节', '2026-02-20': '春节', '2026-02-21': '春节', '2026-02-22': '春节', '2026-02-23': '春节',
+  '2026-04-04': '清明', '2026-04-05': '清明', '2026-04-06': '清明',
+  '2026-05-01': '劳动节', '2026-05-02': '劳动节', '2026-05-03': '劳动节', '2026-05-04': '劳动节', '2026-05-05': '劳动节',
+  '2026-06-19': '端午', '2026-06-20': '端午', '2026-06-21': '端午',
+  '2026-09-25': '中秋', '2026-09-26': '中秋', '2026-09-27': '中秋',
+  '2026-10-01': '国庆', '2026-10-02': '国庆', '2026-10-03': '国庆', '2026-10-04': '国庆',
+  '2026-10-05': '国庆', '2026-10-06': '国庆', '2026-10-07': '国庆',
+  '2027-01-01': '元旦',
+  '2027-01-02': '元旦',
+  '2027-01-03': '元旦',
+  '2027-02-05': '春节',
+  '2027-02-06': '春节',
+  '2027-02-07': '春节',
+  '2027-02-08': '春节',
+  '2027-02-09': '春节',
+  '2027-02-10': '春节',
+  '2027-02-11': '春节',
+  '2027-02-12': '春节',
+  '2027-02-13': '春节',
+  '2027-04-03': '清明节',
+  '2027-04-04': '清明节',
+  '2027-04-05': '清明节',
+  '2027-05-01': '劳动节',
+  '2027-05-02': '劳动节',
+  '2027-05-03': '劳动节',
+  '2027-05-04': '劳动节',
+  '2027-05-05': '劳动节',
+  '2027-06-09': '端午节',
+  '2027-09-15': '中秋节',
+  '2027-10-01': '国庆节',
+  '2027-10-02': '国庆节',
+  '2027-10-03': '国庆节',
+  '2027-10-04': '国庆节',
+  '2027-10-05': '国庆节',
+  '2027-10-06': '国庆节',
+  '2027-10-07': '国庆节'
+};
+// 调休上班日（周末上班）
+const DEFAULT_MAKEUP = ['2026-01-04', '2026-02-14', '2026-02-28', '2026-05-09', '2026-09-20', '2026-10-10',
+  '2027-01-31', '2027-02-14', '2027-05-08', '2027-09-26', '2027-10-09'];
+
+/* ========== 3. 业务类别与子类别 ========== */
+const CATS = [
+  { k: '保全', ic: '🛡', subs: ['保全谈话', '安排保全谈话', '首次保全', '续行保全', '解除保全'] },
+  { k: '排庭', ic: '📅', subs: ['排一次庭', '排二次庭'] },
+  { k: '送达', ic: '📨', subs: ['起诉状证据传票送达', '判决书送达', '调解书送达', '管辖异议裁定送达', '公告送达', '其他送达'] },
+  { k: '调查', ic: '🔍', subs: ['开具调查令', '开具协查函并发送', '线下调查'] },
+  { k: '鉴定', ic: '🧪', subs: ['鉴定谈话', '安排鉴定谈话', '提鉴定系统', '补充鉴定材料'] },
+  { k: '文书校核', ic: '✓', subs: ['文书校核'] },
+  { k: '移送上诉', ic: '⬆', subs: ['送达上诉状副本并开具上诉费缴费单', '制作移送上诉材料并送扫', '点击移送上诉'] },
+  { k: '制作文书', ic: '✎', subs: ['制作文书'] },
+  { k: '审限扣除与报结', ic: '⏱', subs: ['审限扣除与报结'] },
+  { k: '退费', ic: '¥', subs: ['退费'] },
+  { k: '归档', ic: '📦', subs: ['归档'] }
+];
+
+/* ========== 4. 期限规则库 ==========
+   step: n 节点名 | off 偏移 | unit 'w'工作日 'd'自然日 | base 'start'起算日 'prev'上一节点
+         snap 'back'遇休向前取工作日 'fwd'向后取工作日 | opt 可选节点 | tag 节点类型
+   说明：工作日计算遵循民诉法第85条——起算日不计入，自次日起算
+=================================================== */
+const RULES = {
+  '保全|保全谈话': {
+    fields: ['标的物'], life: '谈话日',
+    steps: [{ n: '进行保全谈话', off: 3, unit: 'w', base: 'start' }],
+    note: '已确定谈话日期的情形：期限方式选"指定完成日期"并填入谈话日。该日期会自动作为首次保全的起算日'
+  },
+  '保全|安排保全谈话': {
+    fields: ['标的物'], life: '7个工作日',
+    steps: [{ n: '安排保全谈话', off: 7, unit: 'w', base: 'start', tag: 'talk' }],
+    note: '尚未确定时间、提醒自己去安排：记录后7个工作日内完成安排'
+  },
+  '保全|首次保全': {
+    fields: ['标的物'], life: '谈话后2日出裁定→1日审批→1日移送',
+    steps: [
+      { n: '出保全裁定和流转表', off: 2, unit: 'w', base: 'start' },
+      { n: '提审批单', off: 1, unit: 'w', base: 'prev' },
+      { n: '移送执行局保全组', off: 1, unit: 'w', base: 'prev' },
+      { n: '执行立案（跟进）', off: 0, unit: 'w', base: 'prev', tag: 'follow' }
+    ],
+    note: '起算日＝保全谈话完成日。裁定后1日内提审批单，审批单出具后1日内移送执行局保全组，之后定期询问进度并记录'
+  },
+  '保全|续行保全': {
+    fields: ['标的物', '保全到期日'], needEnd: true, life: '到期前32日出裁定',
+    steps: [
+      { n: '出续行保全裁定和流转表', off: -32, unit: 'd', base: 'end', snap: 'back' },
+      { n: '提审批单', off: 1, unit: 'w', base: 'prev' },
+      { n: '移送执行局保全组', off: 1, unit: 'w', base: 'prev' }
+    ],
+    note: '以保全到期日倒推32日制作裁定，裁定后1日提审批单，审批单出具后1日移送执行局'
+  },
+  '保全|解除保全': {
+    fields: ['标的物'], life: '5日出裁定',
+    steps: [
+      { n: '出解除保全裁定和流转表', off: 5, unit: 'w', base: 'start' },
+      { n: '提审批单', off: 1, unit: 'w', base: 'prev' },
+      { n: '移送执行局保全组', off: 1, unit: 'w', base: 'prev' }
+    ],
+    note: '记录后5个工作日内出裁定和流转表，之后逐级提审批单、移送执行局'
+  },
+
+  '排庭|排一次庭': {
+    fields: ['当事人'], life: '5个工作日',
+    steps: [{ n: '确定开庭时间并记入排庭表', off: 5, unit: 'w', base: 'start' }],
+    note: '记录后5个工作日内将案件记入排庭表。排庭表累计超过5件时，软件会提示可联系送达人员移送'
+  },
+  '排庭|排二次庭': {
+    fields: ['当事人'], life: '3个工作日',
+    steps: [{ n: '联系双方确定开庭时间并制发传票', off: 3, unit: 'w', base: 'start' }],
+    note: '记录后3个工作日内联系原被告双方确定开庭时间并制发传票'
+  },
+
+  '送达|起诉状证据传票送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '' },
+  '送达|判决书送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '' },
+  '送达|调解书送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '' },
+  '送达|管辖异议裁定送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '' },
+  '送达|公告送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '公告送达同样在记录后3个工作日内办结并记入送达表' },
+  '送达|其他送达': { fields: ['文书'], life: '3个工作日', steps: [{ n: '完成送达', off: 3, unit: 'w', base: 'start' }], note: '' },
+
+  '调查|开具调查令': { fields: ['被调查单位'], life: '5个工作日', steps: [{ n: '开具调查令', off: 5, unit: 'w', base: 'start' }], note: '5个工作日内开具并记入调查令表，跟踪调查结果返回情况' },
+  '调查|开具协查函并发送': { fields: ['被调查单位'], life: '5个工作日', steps: [{ n: '开具并发送协查函', off: 5, unit: 'w', base: 'start' }], note: '5个工作日内开具并发送，记入协查表' },
+  '调查|线下调查': { fields: ['被调查单位'], life: '每周分类提醒', steps: [{ n: '完成线下调查', off: 7, unit: 'w', base: 'start', tag: 'follow' }], note: '记入线下调查表，每周按被调查单位分类提醒' },
+
+  '鉴定|鉴定谈话': {
+    fields: ['鉴定事项'], life: '谈话日',
+    steps: [{ n: '进行鉴定谈话', off: 3, unit: 'w', base: 'start' }],
+    note: '已确定谈话日期的情形：期限方式选"指定完成日期"并填入谈话日。该日期会自动作为提鉴定系统的起算日'
+  },
+  '鉴定|安排鉴定谈话': { fields: ['鉴定事项'], life: '7个工作日', steps: [{ n: '安排鉴定谈话', off: 7, unit: 'w', base: 'start' }], note: '尚未确定时间、提醒自己去安排：记录后7个工作日内完成安排' },
+  '鉴定|提鉴定系统': { fields: ['鉴定事项'], life: '谈话后3个工作日', steps: [{ n: '提交鉴定系统', off: 3, unit: 'w', base: 'start' }], note: '起算日＝鉴定谈话完成日，3个工作日内提交鉴定系统' },
+  '鉴定|补充鉴定材料': { fields: ['鉴定事项'], life: '3个工作日', steps: [{ n: '告知当事人补充材料', off: 3, unit: 'w', base: 'start' }], note: '3个工作日内告知当事人补充鉴定材料' },
+
+  '文书校核': { fields: [], life: '7个工作日', steps: [{ n: '完成文书校核', off: 7, unit: 'w', base: 'start' }], note: '' },
+  '文书校核|文书校核': { fields: [], life: '7个工作日', steps: [{ n: '完成文书校核', off: 7, unit: 'w', base: 'start' }], note: '记录后7个工作日内完成校核' },
+
+  '移送上诉|送达上诉状副本并开具上诉费缴费单': {
+    fields: ['上诉方'], life: '立即／补正后3日',
+    steps: [{ n: '送达上诉状副本并开具上诉费缴费单', off: 0, unit: 'w', base: 'start' }],
+    optStep: { n: '确认收到补正上诉状并送达', off: 3, unit: 'w', base: 'start', when: '需补正' },
+    note: '原则上立即完成。如需当事人补正上诉状，勾选"需补正"，3个工作日后提醒确认补正材料是否收到并送达'
+  },
+  '移送上诉|制作移送上诉材料并送扫': {
+    fields: ['上诉方'], life: '15日提醒／30日完成／45日送扫',
+    steps: [
+      { n: '着手准备移送上诉材料', off: 15, unit: 'w', base: 'start' },
+      { n: '完成移送上诉材料制作', off: 30, unit: 'w', base: 'start' },
+      { n: '交扫描员扫描', off: 45, unit: 'w', base: 'start' }
+    ],
+    note: '起算日＝上诉状副本送达日。15个工作日后提醒着手准备，30个工作日内完成，45个工作日内送扫描'
+  },
+  '移送上诉|点击移送上诉': {
+    fields: ['上诉方'], life: '送扫后5个工作日',
+    steps: [{ n: '点击移送上诉', off: 5, unit: 'w', base: 'start' }],
+    note: '起算日＝送扫描员日，5个工作日内完成移送点击'
+  },
+
+  '制作文书|制作文书': { fields: ['文书类型'], life: '每周提醒', steps: [{ n: '完成文书制作', off: 7, unit: 'w', base: 'start', tag: 'weekly' }], note: '记入待写文书表，每周提醒，不强制期限' },
+
+  '审限扣除与报结|审限扣除与报结': { fields: ['扣除事由'], life: '每月最后一周', steps: [{ n: '提交审限扣除／报结', off: 0, unit: 'w', base: 'start', tag: 'month' }], note: '每月最后一周集中梳理需扣审、报结案件，计入当月结案统计' },
+
+  '退费|退费': { fields: ['退费金额', '当事人'], life: '状态跟踪', steps: [], flow: ['当事人提交全部材料', '提审批系统', '庭长签章', '院长签字', '通知当事人领取审批表'], note: '按5个环节推进进度，定期更新状态' },
+
+  '归档|归档': { fields: [], life: '定期提醒', steps: [{ n: '完成归档', off: 30, unit: 'd', base: 'start', tag: 'month' }], note: '记入归档统计表，定期提醒' }
+};
+// 兼容无子类的类别键
+RULES['文书校核'] = RULES['文书校核|文书校核'];
+RULES['制作文书'] = RULES['制作文书|制作文书'];
+RULES['审限扣除与报结'] = RULES['审限扣除与报结|审限扣除与报结'];
+RULES['退费'] = RULES['退费|退费'];
+RULES['归档'] = RULES['归档|归档'];
+
+/* ========== 5. 台账定义 ==========
+   cols: {key,label,width,type}   type: text|status|auto|date
+=================================================== */
+const BOARDS = [
+  { k: '保全', name: '保全统计表', cats: ['保全'],
+    cols: [{ k: 'seq', l: '回执序号', w: 78, t: 'auto' }, { k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 },
+           { k: 'obj', l: '保全标的', w: 130 }, { k: 'prog', l: '目前状态', w: 140, t: 'status' }, { k: 'end', l: '到期时间', w: 110, t: 'date' }] },
+  { k: '排庭', name: '排庭表', cats: ['排庭'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'party', l: '当事人', w: 150 }, { k: 'hearTime', l: '排庭时间', w: 150 }, { k: 'remark', l: '备注', w: 160 }] },
+  { k: '送达', name: '送达案件表', cats: ['送达'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 }, { k: 'docType', l: '文书类型', w: 150 }, { k: 'served', l: '是否送达', w: 100, t: 'status' }] },
+  { k: '调查令', name: '调查令表', cats: ['调查'], subs: ['开具调查令'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 }, { k: 'org', l: '被调查单位', w: 150 }, { k: 'back', l: '调查结果返回情况', w: 160 }] },
+  { k: '协查', name: '协查表', cats: ['调查'], subs: ['开具协查函并发送'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 }, { k: 'org', l: '被调查单位', w: 150 }, { k: 'back', l: '协查结果返回情况', w: 160 }] },
+  { k: '线下调查', name: '线下调查表', cats: ['调查'], subs: ['线下调查'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 }, { k: 'org', l: '被调查单位', w: 150 }, { k: 'remark', l: '备注', w: 140 }] },
+  { k: '鉴定', name: '鉴定表', cats: ['鉴定'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 150 }, { k: 'item', l: '鉴定事项', w: 140 }, { k: 'prog', l: '当前进度', w: 160, t: 'status' }] },
+  { k: '上诉', name: '上诉案件表', cats: ['移送上诉'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 150 }, { k: 'who', l: '上诉方', w: 100 }, { k: 'prog', l: '流程节点', w: 200, t: 'status' }] },
+  { k: '文书', name: '待写文书表', cats: ['制作文书'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'docType', l: '文书类型', w: 160 }, { k: 'remark', l: '备注', w: 140 }] },
+  { k: '退费', name: '退费表', cats: ['退费'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'amount', l: '退费金额', w: 100 }, { k: 'prog', l: '进度状态', w: 220, t: 'status' }] },
+  { k: '归档', name: '归档统计表', cats: ['归档'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'caseName', l: '案件名', w: 160 }, { k: 'prog', l: '状态', w: 120, t: 'status' }] },
+  { k: '结案', name: '结案统计表', cats: ['审限扣除与报结'],
+    cols: [{ k: 'caseNo', l: '案号', w: 170 }, { k: 'reason', l: '扣除事由', w: 140 }, { k: 'prog', l: '状态', w: 130, t: 'status' }] }
+];
+
+/* ========== 6. 存储层 ========== */
+const KEY = 'fzr_assistant_v2';
+const APP_VER = '3.0';
+const DB_VERSION = 3;
+const BACKUP_PREFIX = 'fzr_backup_';
+const BACKUP_KEEP = 7;
+let DB = {
+  tasks: [], holidays: Object.assign({}, DEFAULT_HOLIDAYS), makeup: DEFAULT_MAKEUP.slice(),
+  seq: { 保全: 1 }, remindDay: 1, hasData: false, v: DB_VERSION, holidayDeleted: [], sync: null,
+  meta: { dirty: false }
+};
+let HOL = {}, MAKEUP = new Set(), MEMFALLBACK = null;
+
+// 数据版本迁移：以后字段增减都在这里升级，老数据自动补齐
+function migrateDB() {
+  const v = Number(DB.v) || 1;
+  if (v < 2) { DB.holidayDeleted = DB.holidayDeleted || []; DB.sync = DB.sync || null; }
+  if (v < 3) { DB.meta = DB.meta || { dirty: false }; DB.seq = DB.seq || { 保全: 1 }; }
+  DB.v = DB_VERSION;
+}
+// 数据体检：结构异常时自动修复，避免坏一条影响整体
+function validateDB() {
+  if (!Array.isArray(DB.tasks)) DB.tasks = [];
+  DB.tasks = DB.tasks.filter(function (t) { return t && t.id && t.cat; });
+  DB.tasks.forEach(function (t) {
+    if (!t.extra || typeof t.extra !== 'object') t.extra = {};
+    if (!Array.isArray(t.logs)) t.logs = [];
+    if (t.status !== 'done') t.status = 'doing';
+    if (!Array.isArray(t.steps)) t.steps = [];
+    if (typeof t.flow !== 'number') t.flow = 0;
+    if (!t.start) t.start = todayStr();
+    if (!t.sub) t.sub = t.cat;
+  });
+  if (!DB.holidays || typeof DB.holidays !== 'object') DB.holidays = Object.assign({}, DEFAULT_HOLIDAYS);
+  if (!Array.isArray(DB.makeup)) DB.makeup = [];
+  if (!Array.isArray(DB.holidayDeleted)) DB.holidayDeleted = [];
+  if (!DB.meta) DB.meta = { dirty: false };
+  if (!DB.seq) DB.seq = { 保全: 1 };
+  if (typeof DB.remindDay !== 'number') DB.remindDay = 1;
+  DB.v = DB_VERSION;
+}
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { const o = JSON.parse(raw); DB = Object.assign(DB, o); }
+  } catch (e) { DB = MEMFALLBACK || DB; }
+  migrateDB();
+  validateDB();
+  HOL = DB.holidays; MAKEUP = new Set(DB.makeup);
+  (DB.tasks || []).forEach(t => recalc(t));
+}
+
+/* ---- 自动滚动备份：每天首次打开存一份，保留最近 7 天 ---- */
+function snapshotData() {
+  const copy = JSON.parse(JSON.stringify(DB));
+  if (copy.sync) { delete copy.sync.token; delete copy.sync.pwd; }  // 备份里不留凭据
+  copy.v = DB_VERSION;
+  return copy;
+}
+function autoBackup(force) {
+  try {
+    const day = todayStr();
+    const key = BACKUP_PREFIX + day;
+    if (!force && localStorage.getItem(key)) return false;
+    localStorage.setItem(key, JSON.stringify({ at: new Date().toISOString(), v: DB_VERSION, data: snapshotData() }));
+    cleanupBackups();
+    return true;
+  } catch (e) { return false; }
+}
+function listBackups() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(BACKUP_PREFIX) === 0) {
+        let meta = null;
+        try { meta = JSON.parse(localStorage.getItem(k)); } catch (e) { }
+        out.push({
+          key: k, date: k.slice(BACKUP_PREFIX.length),
+          count: meta && meta.data && meta.data.tasks ? meta.data.tasks.length : 0
+        });
+      }
+    }
+  } catch (e) { }
+  out.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+  return out;
+}
+function cleanupBackups() {
+  const keys = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(BACKUP_PREFIX) === 0) keys.push(k);
+    }
+  } catch (e) { }
+  keys.sort();
+  while (keys.length > BACKUP_KEEP) {
+    try { localStorage.removeItem(keys.shift()); } catch (e) { }
+  }
+}
+function restoreBackup(key) {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(key)); } catch (e) { return false; }
+  if (!o || !o.data || !Array.isArray(o.data.tasks)) return false;
+  const keepSync = DB.sync;
+  // 原地更新，避免外部持有的 DB 引用失效
+  Object.keys(DB).forEach(function (k) { if (k !== 'sync') delete DB[k]; });
+  Object.assign(DB, o.data);
+  DB.sync = keepSync;          // 保留本机同步配置
+  migrateDB(); validateDB();
+  HOL = DB.holidays; MAKEUP = new Set(DB.makeup);
+  DB.tasks.forEach(function (t) { recalc(t); });
+  saveDB();
+  return true;
+}
+function lastBackupText() {
+  const list = listBackups();
+  if (!list.length) return '暂无';
+  return list[0].date + '，' + list[0].count + ' 条任务';
+}
+function saveDB(silent) {
+  if (!silent && DB.meta) DB.meta.dirty = true;
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch (e) { MEMFALLBACK = JSON.parse(JSON.stringify(DB)); console.warn('存储不可用，已暂存内存', e); }
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+/* ========== 7. 期限引擎 ========== */
+function refreshCal() { HOL = DB.holidays; MAKEUP = new Set(DB.makeup); }
+function isWorkday(s) {
+  if (!s) return false;
+  if (MAKEUP.has(s)) return true;
+  if (HOL[s]) return false;
+  const w = parseYmd(s).getDay();
+  return w !== 0 && w !== 6;
+}
+// 自次日起数 n 个工作日（n 可为负，负数向前数）
+function shiftWorkdays(start, n) {
+  if (!n) return start;
+  const dir = n > 0 ? 1 : -1;
+  const cur = parseYmd(start); let cnt = 0, guard = 0;
+  while (cnt < Math.abs(n) && guard++ < 6000) {
+    cur.setDate(cur.getDate() + dir);
+    if (isWorkday(ymd(cur))) cnt++;
+  }
+  return ymd(cur);
+}
+function shiftDays(start, n) {
+  const d = parseYmd(start); d.setDate(d.getDate() + n); return ymd(d);
+}
+function snapWorkday(s, dir) {
+  const d = parseYmd(s); let guard = 0;
+  while (!isWorkday(ymd(d)) && guard++ < 40) d.setDate(d.getDate() + dir);
+  return ymd(d);
+}
+function diffDays(a, b) { return Math.round((parseYmd(a) - parseYmd(b)) / 86400000); }
+function fmtCN(s) {
+  if (!s) return '—';
+  const d = parseYmd(s);
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+function fmtFull(s) {
+  if (!s) return '—';
+  const d = parseYmd(s);
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 周' + WEEKCN[d.getDay()];
+}
+// 节假日名称（用于提示"因节假日顺延"）
+function holidayName(s) { return HOL[s] || ''; }
+
+/* ========== 8. 任务计算 ========== */
+function ruleOf(t) { return RULES[t.cat + '|' + t.sub] || RULES[t.cat] || { steps: [] }; }
+
+function recalc(t) {
+  const rule = ruleOf(t);
+  const old = t.steps || [];
+  const out = [];
+  const absOn = (t.dueMode === 'absolute' && !!t.absDue);
+  const startBase = absOn ? t.absDue : t.start;
+  const firstOff = (rule.steps && rule.steps[0]) ? rule.steps[0].off : 0;
+  const firstUnit = (rule.steps && rule.steps[0]) ? rule.steps[0].unit : 'w';
+  let prevBase = startBase;
+  (rule.steps || []).forEach((s, si) => {
+    let base;
+    if (s.base === 'end') base = t.endDate || t.start;
+    else if (s.base === 'prev') base = prevBase;
+    else base = startBase;
+    let off = s.off;
+    // 自定义期限：仅覆盖以起算日为基准的第一个工作日节点
+    if (si === 0 && s.base === 'start' && s.unit === 'w' &&
+      t.customDays !== null && t.customDays !== undefined && t.customDays !== '' && !isNaN(t.customDays)) {
+      off = Number(t.customDays);
+    }
+    // 指定日期模式：并联节点保持与首节点的相对间隔，不整体平移
+    if (si > 0 && absOn && s.base === 'start' && s.unit === firstUnit) off = s.off - firstOff;
+    // 首个节点锁定为指定日期，不顺延
+    const isAbs = (si === 0 && absOn);
+    let due = isAbs ? t.absDue : (s.unit === 'w' ? shiftWorkdays(base, off) : shiftDays(base, off));
+    if (!isAbs && s.snap) due = snapWorkday(due, s.snap === 'back' ? -1 : 1);
+    const o = old.find(x => x.n === s.n) || {};
+    out.push({ n: s.n, due: due, tag: s.tag || '', done: !!o.done, doneAt: o.doneAt || '' });
+    prevBase = o.done ? (o.doneAt || due) : due;
+  });
+  // 可选节点（如上诉状需补正）
+  if (rule.optStep) {
+    const key = rule.optStep.when;
+    const enabled = t.extra && t.extra[key] === true;
+    if (enabled) {
+      const s = rule.optStep;
+      const o = old.find(x => x.n === s.n) || {};
+      out.push({ n: s.n, due: shiftWorkdays(t.start, s.off), tag: 'opt', done: !!o.done, doneAt: o.doneAt || '', opt: true });
+    }
+  }
+  t.steps = out;
+  return t;
+}
+
+// 下一个待办节点
+function nextStep(t) {
+  return (t.steps || []).find(s => !s.done) || null;
+}
+function minDue(t) {
+  const pend = (t.steps || []).filter(s => !s.done);
+  if (!pend.length) return null;
+  return pend.map(s => s.due).sort()[0];
+}
+function isAllDone(t) { return (t.steps || []).length > 0 && (t.steps || []).every(s => s.done); }
+
+/* 任务状态：overdue 逾期 / today 今日到期 / soon 3日内 / upcoming / done */
+function stateOf(t) {
+  if (isAllDone(t)) return 'done';
+  const d = minDue(t);
+  if (!d) return 'upcoming';
+  const n = diffDays(d, todayStr());
+  if (n < 0) return 'overdue';
+  if (n === 0) return 'today';
+  if (n <= 3) return 'soon';
+  return 'upcoming';
+}
+
+/* 台账"当前状态"推导 */
+function progressOf(t) {
+  const doneSet = new Set((t.steps || []).filter(s => s.done).map(s => s.n));
+  if (t.cat === '退费') {
+    const f = ruleOf(t).flow || [];
+    return f[t.flow || 0] || f[0] || '—';
+  }
+  if (t.cat === '保全') {
+    if (t.sub === '安排保全谈话') return doneSet.has('安排保全谈话') ? '谈话已完成' : '待安排谈话';
+    if (doneSet.has('执行立案（跟进）')) return '执行立案';
+    if (doneSet.has('移送执行局保全组')) return '已经移送执行';
+    if (doneSet.has('提审批单')) return '已经提审批单';
+    if (doneSet.has('出保全裁定和流转表') || doneSet.has('出续行保全裁定和流转表') || doneSet.has('出解除保全裁定和流转表')) return '已出裁定';
+    return '保全谈话完毕';
+  }
+  if (t.cat === '送达') return doneSet.has('完成送达') ? '已送达' : '未送达';
+  if (t.cat === '移送上诉') {
+    const nx = nextStep(t);
+    return nx ? '待：' + nx.n : '全部完成';
+  }
+  if (t.sub === '线下调查') return doneSet.has('完成线下调查') ? '已完成' : '进行中';
+  const all = t.steps || [];
+  if (!all.length) return '进行中';
+  if (all.every(s => s.done)) return '已完成';
+  const nx = nextStep(t);
+  return nx ? '待：' + nx.n : '进行中';
+}
+
+/* 新建任务 */
+function makeTask(o) {
+  const t = {
+    id: uid(), cat: o.cat, sub: o.sub, caseNo: (o.caseNo || '').trim(), caseName: (o.caseName || '').trim(),
+    start: o.start || todayStr(), endDate: o.endDate || '', extra: o.extra || {},
+    steps: [], flow: 0, logs: [], status: 'doing', doneAt: '', createdAt: new Date().toISOString(),
+    customDays: (o.customDays === undefined ? null : o.customDays),
+    dueMode: o.dueMode || 'relative', absDue: o.absDue || ''
+  };
+  if (t.cat === '保全' && !t.extra.seqNo) { t.extra.seqNo = DB.seq[t.cat] || 1; DB.seq[t.cat] = (DB.seq[t.cat] || 1) + 1; }
+  recalc(t);
+  return t;
+}
+
+/* ========== 9. 自然语言解析 ========== */
+const KW = [
+  { re: /(上诉状|上诉费|缴费单)/, cat: '移送上诉', sub: '送达上诉状副本并开具上诉费缴费单' },
+  { re: /(安排.{0,4}鉴定谈话|安排鉴定)/, cat: '鉴定', sub: '安排鉴定谈话' },
+  { re: /(鉴定谈话)/, cat: '鉴定', sub: '鉴定谈话' },
+  { re: /(安排.{0,4}保全谈话)/, cat: '保全', sub: '安排保全谈话' },
+  { re: /(保全谈话)/, cat: '保全', sub: '保全谈话' },
+  { re: /(续行保全|续保|续封|延期保全)/, cat: '保全', sub: '续行保全' },
+  { re: /(解除保全|解封|解保|解除查封)/, cat: '保全', sub: '解除保全' },
+  { re: /(首次保全|做保全|财产保全|诉讼保全|保全)/, cat: '保全', sub: '首次保全' },
+  { re: /(二次庭|第二次开庭|再次开庭|二次开庭)/, cat: '排庭', sub: '排二次庭' },
+  { re: /(排一次庭|排.{0,2}庭|排期|安排开庭|定庭|开庭)/, cat: '排庭', sub: '排一次庭' },
+  { re: /(管辖异议)/, cat: '送达', sub: '管辖异议裁定送达' },
+  { re: /(调解书)/, cat: '送达', sub: '调解书送达' },
+  { re: /(判决书|发判决|判決)/, cat: '送达', sub: '判决书送达' },
+  { re: /(公告送达|公告)/, cat: '送达', sub: '公告送达' },
+  { re: /(起诉状|应诉材料|传票)/, cat: '送达', sub: '起诉状证据传票送达' },
+  { re: /(调查令)/, cat: '调查', sub: '开具调查令' },
+  { re: /(协查函|协查)/, cat: '调查', sub: '开具协查函并发送' },
+  { re: /(线下调查|实地调查|外出调查|去.{0,12}调查|上门调查)/, cat: '调查', sub: '线下调查' },
+  { re: /(补充鉴定|补充材料|补材料)/, cat: '鉴定', sub: '补充鉴定材料' },
+  { re: /(提鉴定|鉴定系统|委托鉴定|启动鉴定|鉴定)/, cat: '鉴定', sub: '提鉴定系统' },
+  { re: /(校核|校对|核稿|核对文书)/, cat: '文书校核', sub: '文书校核' },
+  { re: /(制作文书|写判决|撰写|起草|拟稿|做文书)/, cat: '制作文书', sub: '制作文书' },
+  { re: /(移送材料|送扫|扫描|移送上诉材料)/, cat: '移送上诉', sub: '制作移送上诉材料并送扫' },
+  { re: /(点击移送|移送上诉|上诉移送)/, cat: '移送上诉', sub: '点击移送上诉' },
+  { re: /(扣审|审限扣除|报结|结案)/, cat: '审限扣除与报结', sub: '审限扣除与报结' },
+  { re: /(退费|退诉讼费|退钱)/, cat: '退费', sub: '退费' },
+  { re: /(归档|立卷|装卷)/, cat: '归档', sub: '归档' },
+  { re: /(安排.{0,2}谈话)/, cat: '保全', sub: '安排保全谈话' },
+  { re: /(送达|邮寄|发文书)/, cat: '送达', sub: '其他送达' }
+];
+const ORG_RE = /([\u4e00-\u9fa5]{2,12}(?:银行|支行|分行|信用社|公司|管理局|公安局|派出所|不动产登记中心|市场监督管理局|医院|学校|村民委员会|居委会|社保中心|公积金中心))/;
+const CN = '〇一二三四五六七八九';
+
+function cnNumToInt(s) {
+  if (/^\d+$/.test(s)) return parseInt(s, 10);
+  if (s === '十') return 10;
+  let total = 0;
+  if (s.indexOf('十') >= 0) {
+    const p = s.split('十');
+    total += (p[0] ? CN.indexOf(p[0]) : 1) * 10;
+    total += (p[1] ? CN.indexOf(p[1]) : 0);
+  } else {
+    for (const c of s) total = total * 10 + CN.indexOf(c);
+  }
+  return total;
+}
+
+const CASENAME_STOP = /^(?:这个|那个|该|本|此|上述|新收|全部|所有|各个|每个|一个|两个|几个|这些|那些|哪些|什么|有关)/;
+// 业务词 / 时间词，不能作为案件名
+const BIZ_RE = /^(上诉|移送|保全|鉴定|送达|排庭|开庭|调查|协查|归档|退费|文书|制作|审限|报结|结案|谈话|判决|调解|执行|立案|管辖|公告|证据|传票|起诉|扫描|缴费|补充|首次|续行|解除|安排|校核|扣审|材料|案件|案子)/;
+const TIME_RE = /^(今天|明天|昨天|后天|前天|上午|下午|晚上|中午|现在|刚才|本周|下周|上周|月底|月初|这个|那个|已经|刚刚|马上)/;
+
+function isInvalidName(s) {
+  if (!s) return true;
+  const v = String(s).trim();
+  if (v.length < 2 || v.length > 12) return true;
+  if (CASENAME_STOP.test(v)) return true;
+  if (BIZ_RE.test(v)) return true;
+  if (TIME_RE.test(v)) return true;
+  if (/^[0-9〇一二三四五六七八九十百千万]+$/.test(v)) return true;
+  return false;
+}
+
+// 语音文本归一化：口语「杠」→ 连字符，全角横线统一
+function normalizeSpeech(t) {
+  let s = String(t || '');
+  s = s.replace(/[－—–﹣−ー]/g, '-');
+  s = s.replace(/(\d)\s*(?:杠|橫|横|港|刚|钢|减|減|短横线|短横|一横|破折号)\s*(?=\d)/g, '$1-');
+  s = s.replace(/(\d)\s*-\s*(\d)/g, '$1-$2');
+  return s;
+}
+
+function parseInput(text) {
+  const raw = normalizeSpeech(String(text || '').trim());
+  const res = { cat: '', sub: '', caseNo: '', caseName: '', start: todayStr(), absDue: '', dueMode: 'relative', extra: {}, hit: null, warns: [] };
+
+  // 1. 案号：① 完整格式 (2026)京0105民初1234号 ② "案号xxx" ③ 独立连续数字
+  const mCase = raw.match(/[（(]\s*(\d{4})\s*[）)]\s*([^\s，,。；;、]{2,24}?号)/);
+  if (mCase) {
+    res.caseNo = '(' + mCase[1] + ')' + mCase[2];
+  } else {
+    const m2 = raw.match(/[（(]\s*\d{4}\s*[）)][^\s，,。；;、]{2,24}/);
+    if (m2) res.caseNo = m2[0];
+    else {
+      const m3 = raw.match(/(?:案号|编号)[:：是]?\s*([0-9A-Za-z\u4e00-\u9fa5（）()-]{3,24})/);
+      if (m3) res.caseNo = m3[1];
+      else {
+        // 短横线式案号，如 25-3765
+        const mDash = raw.match(/(?:^|[^\d])(\d{2,4}-\d{2,6})(?![\d])/);
+        if (mDash) res.caseNo = mDash[1];
+        else {
+          // 连续数字≥4位；排除年份（后接"年"）与 ISO 日期
+          const m4 = raw.match(/(?:^|[^\d年月日第])(\d{4,})(?![\d年月日号]|[-/.]\d)/);
+          if (m4) res.caseNo = m4[1];
+        }
+      }
+    }
+  }
+
+  // 2. 案件名：① X诉Y ② "X案件/X的案子" ③ "X案"
+  let work = raw;
+  if (res.caseNo) work = work.split(res.caseNo).join(' ');
+  work = work.replace(/[（(]\s*\d{4}\s*[）)][^\s，,。；;、]{2,24}?号/, ' ');
+  // 剥离时间表达（6:30 / 6点30分 / 11月27日 / 十一月二十七日 / 上午），避免混入案件名
+  work = work.replace(/\d{1,2}\s*[:：]\s*\d{1,2}/g, ' ')
+    .replace(/\d{1,2}\s*[点點时時]\s*\d{0,2}\s*分?/g, ' ')
+    .replace(/\d{1,2}\s*月\s*\d{1,2}\s*[日号]?/g, ' ')
+    .replace(/[〇一二三四五六七八九十]{1,3}\s*月\s*[〇一二三四五六七八九十]{1,3}\s*[日号]/g, ' ')
+    .replace(/[〇一二三四五六七八九十]{2,4}\s*年/g, ' ')
+    .replace(/(上午|下午|中午|晚上|早上|凌晨|傍晚|夜里)/g, ' ');
+  // 剥离案由词，避免把案由并入当事人姓名
+  const cleanedW = work.replace(/(民间借贷|买卖合同|借款合同|金融借款|离婚|劳动争议|机动车交通事故[责任]*|物业服务|房屋买卖|商品房|租赁合同|承揽合同|继承|不当得利|侵权责任|建设工程施工合同|保险合同|追偿权|票据|公司决议|合伙协议|合同|纠纷)/g, ' ');
+
+  // ① 甲诉乙 / 甲 vs 乙
+  const mParty = cleanedW.match(/([\u4e00-\u9fa5]{2,4})\s*(?:诉|起诉|vs\.?|v\s*\.?\s*s\.?)\s*([\u4e00-\u9fa5]{2,4})/i);
+  if (mParty) {
+    res.caseName = mParty[1] + '诉' + mParty[2];
+    res.extra['当事人'] = mParty[1] + '、' + mParty[2];
+  } else {
+    // ② X案件 / X案子 / X案
+    const mCN = cleanedW.match(/([\u4e00-\u9fa5A-Za-z]{2,12}?)(?:的)?(?:案件|案子)/);
+    let nm = mCN ? mCN[1] : '';
+    if (!nm) {
+      const mAN = cleanedW.match(/([\u4e00-\u9fa5]{2,6})案(?!件|号|由|情|的)/);
+      if (mAN) nm = mAN[1];
+    }
+    nm = nm.replace(/^(?:关于|有关)/, '').trim();
+    if (nm && !isInvalidName(nm)) res.caseName = nm;
+  }
+
+  // ③ 兜底：剥离业务关键词后，取最前面一段像人名的中文
+  if (!res.caseName) {
+    let rest = cleanedW;
+    for (let i = 0; i < KW.length; i++) {
+      rest = rest.replace(new RegExp(KW[i].re.source, 'g'), ' ');
+    }
+    rest = rest.replace(/[，,。；;、：:\s]+/g, ' ').trim();
+    const segs = rest.split(' ').filter(Boolean);
+    for (let i = 0; i < segs.length; i++) {
+      const s = segs[i];
+      if (s.length >= 2 && s.length <= 4 && !isInvalidName(s)) { res.caseName = s; break; }
+    }
+  }
+
+  // 3. 日期：明确日期 → 指定完成日；今天/昨天/收到 → 起算日
+  let start = todayStr(), absDue = '', dueMode = 'relative';
+  if (/(前天)/.test(raw)) start = shiftDays(todayStr(), -2);
+  else if (/(昨天|昨日)/.test(raw)) start = shiftDays(todayStr(), -1);
+  else if (/(明天|明日)/.test(raw)) start = shiftDays(todayStr(), 1);
+
+  let concrete = '';
+  const mISO = raw.match(/(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (mISO) {
+    concrete = mISO[1] + '-' + pad(+mISO[2]) + '-' + pad(+mISO[3]);
+  } else {
+    const mMD = raw.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+    if (mMD) {
+      const mm = +mMD[1], dd = +mMD[2];
+      if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
+        let dt = new Date(new Date().getFullYear(), mm - 1, dd);
+        const gap = diffDays(ymd(dt), todayStr());
+        if (gap > 180 || gap < -90) dt = new Date(dt.getFullYear() + 1, mm - 1, dd);
+        concrete = ymd(dt);
+      }
+    }
+  }
+  if (concrete) {
+    // 句中"收到/立案/受理/签收"等，说明该日期是事情发生的起点
+    if (/(收到|接到|立案|受理|领取|拿到|签收)/.test(raw)) {
+      start = concrete;
+    } else {
+      absDue = concrete; dueMode = 'absolute'; start = concrete;
+    }
+  }
+  res.start = start; res.absDue = absDue; res.dueMode = dueMode;
+  // 4. 类别
+  for (const k of KW) {
+    if (k.re.test(work)) { res.cat = k.cat; res.sub = k.sub; res.hit = k.re.source; break; }
+  }
+  // 5. 附属字段
+  const mOrg = raw.match(ORG_RE);
+  if (mOrg) {
+    res.extra['被调查单位'] = mOrg[1];
+    if (res.cat === '调查' && res.sub === '线下调查') { /* 分类保留 */ }
+  }
+  const mAmt = raw.match(/(\d+(?:\.\d+)?)\s*(万元|万|元)/);
+  if (mAmt) res.extra['退费金额'] = mAmt[1] + (mAmt[2] === '万' || mAmt[2] === '万元' ? '万元' : '元');
+  if (/(补正)/.test(raw) && res.cat === '移送上诉') res.extra['需补正'] = true;
+  if (/(续行|续保)/.test(raw)) {
+    const mEnd = raw.match(/(保全)?到期(?:日|时间)?[为是]?\s*(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}月\d{1,2}日)/);
+    if (mEnd) {
+      let es = mEnd[2];
+      const im = es.match(/(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})/);
+      if (im) res.endDate = im[1] + '-' + pad(+im[2]) + '-' + pad(+im[3]);
+      else { const mm = es.match(/(\d{1,2})月(\d{1,2})日/); if (mm) res.endDate = new Date().getFullYear() + '-' + pad(+mm[1]) + '-' + pad(+mm[2]); }
+    }
+  }
+  if (!res.cat) res.warns.push('未能识别业务类别，请手动选择');
+  return res;
+}
+
+/* ========== 10. 视图层 ========== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let curTab = 'today', curBoard = '保全', q = '', fCat = '全部';
+const iconOf = c => (CATS.find(x => x.k === c) || {}).ic || '•';
+
+function sortByState(list) {
+  const order = { overdue: 0, today: 1, soon: 2, upcoming: 3, flow: 4, done: 5 };
+  return list.slice().sort((a, b) => {
+    const sa = stateOf(a), sb = stateOf(b);
+    if (order[sa] !== order[sb]) return order[sa] - order[sb];
+    return (minDue(a) || '9') < (minDue(b) || '9') ? -1 : 1;
+  });
+}
+
+function dueTag(t) {
+  const st = stateOf(t), d = minDue(t);
+  if (st === 'done') return '<span class="tag ok">已完成</span>';
+  if (st === 'flow') return '<span class="tag">进度跟踪中</span>';
+  if (!d) return '';
+  const n = diffDays(d, todayStr());
+  if (n < 0) return '<span class="tag od">逾期 ' + (-n) + ' 天</span>';
+  if (n === 0) return '<span class="tag due">今日到期</span>';
+  if (n <= 3) return '<span class="tag due">剩 ' + n + ' 天</span>';
+  return '<span class="tag">' + fmtCN(d) + ' 到期</span>';
+}
+
+function taskItem(t) {
+  const st = stateOf(t);
+  const cls = st === 'overdue' ? ' od' : (st === 'today' ? ' td' : '');
+  const nx = nextStep(t);
+  const d = minDue(t);
+  let body = '';
+  if (t.cat === '退费') {
+    const f = ruleOf(t).flow || [];
+    body = '<div class="step">进度：<b>' + esc(f[t.flow || 0] || '—') + '</b> <span style="color:#8b96a5">(' + ((t.flow || 0) + 1) + '/' + f.length + ')</span></div>';
+  } else if (nx) {
+    const late = d && diffDays(d, todayStr()) < 0;
+    body = '<div class="step">当前节点：<b>' + esc(nx.n) + '</b>　' +
+      (late ? '<span style="color:#c62f2f">原定 ' + fmtCN(nx.due) + '</span>' : '<span style="color:#6b7787">期限 ' + fmtCN(nx.due) + '</span>') +
+      (nx.done ? '' : '') + '</div>';
+  } else if (t.steps.length && isAllDone(t)) {
+    body = '<div class="step" style="color:#1f7a4d">全部节点已完成</div>';
+  }
+  const holidayHint = d && holidayName(shiftDays(d, 1)) && isWorkday(d) ? '' : '';
+  return '<div class="task' + cls + '" data-open="' + t.id + '">' +
+    '<div class="l1"><div style="min-width:0;flex:1">' +
+      '<div class="cs">' + (t.caseNo ? esc(t.caseNo) : '<span style="color:#8b96a5">未填案号</span>') + '</div>' +
+      (t.caseName ? '<div class="cname">' + esc(t.caseName) + '</div>' : '') +
+    '</div></div>' +
+    '<div class="l2"><span class="tag cat">' + iconOf(t.cat) + ' ' + esc(t.cat) + (t.sub && t.sub !== t.cat ? '·' + esc(t.sub) : '') + '</span>' + dueTag(t) +
+    (t.dueMode === 'absolute' ? '<span class="tag">指定日</span>' : '') +
+    (t.extra['需补正'] ? '<span class="tag wk">需补正</span>' : '') + '</div>' +
+    body +
+    '<div class="acts">' +
+      (nx ? '<button class="chk" data-done="' + t.id + '">✓ 完成「' + esc(nx.n) + '」</button>' : '') +
+      (t.cat === '退费' && stateOf(t) !== 'done' ? '<button class="chk" data-flow="' + t.id + '">→ 推进进度</button>' : '') +
+    '</div></div>';
+}
+
+/* ---------- 今日工作台 ---------- */
+function renderToday() {
+  const all = DB.tasks.filter(t => t.status !== 'done');
+  const over = sortByState(all.filter(t => stateOf(t) === 'overdue'));
+  const today = sortByState(all.filter(t => stateOf(t) === 'today'));
+  const soon = sortByState(all.filter(t => stateOf(t) === 'soon'));
+  const later = sortByState(all.filter(t => stateOf(t) === 'upcoming' || stateOf(t) === 'flow'));
+  const doneToday = DB.tasks.filter(t => (t.steps || []).some(s => s.done && s.doneAt === todayStr())).length;
+  const w = parseYmd(todayStr()).getDay();
+  const isRemind = w === DB.remindDay;
+
+  let h = '<div class="ov">' +
+    '<div class="cell r"><div class="v">' + over.length + '</div><div class="k">逾期</div></div>' +
+    '<div class="cell o"><div class="v">' + today.length + '</div><div class="k">今日到期</div></div>' +
+    '<div class="cell"><div class="v">' + soon.length + '</div><div class="k">3日内</div></div>' +
+    '<div class="cell g"><div class="v">' + doneToday + '</div><div class="k">今日办结</div></div>' +
+    '</div>';
+
+  if (!DB.tasks.length) {
+    h += '<div class="empty"><span class="big">☰</span>还没有任务<br>点下方 <b>＋</b> 输入今天要做的事<br><span style="font-size:12.5px">例如：<i>(2026)京0105民初1234号 张三诉李四 今天收到起诉状要送达</i></span></div>';
+    return h;
+  }
+
+  if (over.length) {
+    h += '<div class="sec-t"><span>⚠ 已逾期</span><span class="n hot">' + over.length + '</span></div><div class="card tight">' + over.map(taskItem).join('') + '</div>';
+  }
+  if (today.length) {
+    h += '<div class="sec-t"><span>今日应办</span><span class="n warm">' + today.length + '</span></div><div class="card tight">' + today.map(taskItem).join('') + '</div>';
+  }
+  if (soon.length) {
+    h += '<div class="sec-t"><span>3日内到期</span><span class="n">' + soon.length + '</span></div><div class="card tight">' + soon.map(taskItem).join('') + '</div>';
+  }
+  if (!over.length && !today.length && !soon.length) {
+    h += '<div class="card" style="text-align:center;padding:26px 14px"><div style="font-size:30px;margin-bottom:6px">✓</div><div style="font-weight:600;color:#1f7a4d">今日无临期事项</div><div style="font-size:13px;color:#6b7787;margin-top:5px">后续 ' + later.length + ' 项任务在排队</div></div>';
+  }
+  if (later.length) {
+    h += '<div class="sec-t"><span>后续待办</span><span class="n">' + later.length + '</span></div><div class="card tight">' + later.map(taskItem).join('') + '</div>';
+  }
+  h += renderMonthly();
+  h += renderWeekly(isRemind);
+  return h;
+}
+
+/* 周期性跟进提醒 */
+function renderWeekly(showNow) {
+  const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][DB.remindDay];
+  const groups = [
+    { k: '保全进度跟进', ic: '🛡', list: DB.tasks.filter(t => t.cat === '保全' && t.status !== 'done') },
+    { k: '鉴定进度询问', ic: '🧪', list: DB.tasks.filter(t => t.cat === '鉴定' && t.status !== 'done') },
+    { k: '待写文书', ic: '✎', list: DB.tasks.filter(t => t.cat === '制作文书' && t.status !== 'done') },
+    { k: '退费进度更新', ic: '¥', list: DB.tasks.filter(t => t.cat === '退费' && t.status !== 'done') },
+    { k: '归档待办', ic: '📦', list: DB.tasks.filter(t => t.cat === '归档' && t.status !== 'done') },
+    { k: '线下调查分类', ic: '🔍', list: DB.tasks.filter(t => t.sub === '线下调查' && t.status !== 'done') }
+  ].filter(g => g.list.length);
+  if (!groups.length) return '';
+  let h = '<div class="sec-t"><span>每周跟进（' + wd + '）</span><span class="n">' + (showNow ? '今日' : '提示') + '</span></div>';
+  if (!showNow) {
+    h += '<div class="note">本周跟进清单共 ' + groups.reduce((a, g) => a + g.list.length, 0) + ' 项，每个' + wd + '集中提醒。今天不是提醒日，如需查看请到「设置」调整提醒日。</div>';
+    return h;
+  }
+  groups.forEach(g => {
+    h += '<div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:9px">' + g.ic + ' ' + g.k + ' <span style="color:#6b7787;font-weight:400;font-size:12.5px">' + g.list.length + ' 项</span></div>';
+    if (g.k === '线下调查分类') {
+      const byOrg = {};
+      g.list.forEach(t => { const o = (t.extra['被调查单位'] || '未填单位'); (byOrg[o] = byOrg[o] || []).push(t); });
+      Object.keys(byOrg).forEach(o => {
+        h += '<div style="margin-bottom:8px"><span class="pill" style="background:#eaf2fb;color:#2c5c8f;font-weight:600">' + esc(o) + '（' + byOrg[o].length + '）</span><br>' +
+          byOrg[o].map(t => '<span style="font-size:13px;color:#44536a">' + esc(t.caseNo || '未填案号') + '</span>').join('　') + '</div>';
+      });
+    } else {
+      g.list.forEach(t => {
+        h += '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13.5px">' +
+          '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(t.caseNo || '未填案号') + '</span>' +
+          '<span style="color:#6b7787;white-space:nowrap;font-size:12.5px">' + esc(progressOf(t)) + '</span></div>';
+      });
+    }
+    h += '</div>';
+  });
+  return h;
+}
+
+/* 月度提醒：每月最后一周梳理扣审、报结与归档 */
+function isLastWeekOfMonth() {
+  const d = new Date();
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return (daysInMonth - d.getDate()) <= 6;
+}
+function renderMonthly() {
+  const pend = DB.tasks.filter(t => t.cat === '审限扣除与报结' && t.status !== 'done');
+  const arch = DB.tasks.filter(t => t.cat === '归档' && t.status !== 'done');
+  const last = isLastWeekOfMonth();
+  if (!last) {
+    if (!pend.length) return '';
+    return '<div class="note">本月已登记 ' + pend.length + ' 件待扣审／报结案件。' + '<b>每月最后一周</b>集中梳理并计入当月结案统计。</div>';
+  }
+  let h = '<div class="sec-t"><span>本月最后一周 · 月度收尾</span><span class="n warm">待办</span></div>';
+  h += '<div class="card" style="border-color:#f0d9b3;background:#fffdf8">' +
+    '<div style="font-size:14px;font-weight:600;margin-bottom:8px">⏱ 审限扣除与报结</div>' +
+    '<div style="font-size:13.5px;color:#5a4a33;line-height:1.8">请梳理本月需作审限扣除、报结的案件，录入后自动计入当月结案统计表。</div>' +
+    (pend.length ? '<div style="margin-top:8px">' + pend.map(t => '<span class="pill">' + esc(t.caseNo || '未填案号') + '</span>').join('') + '</div>' : '') +
+    '<button class="btn sm" style="margin-top:10px" data-quickadd="审限扣除与报结">＋ 登记扣审／报结</button></div>';
+  h += '<div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:6px">📦 归档</div>' +
+    '<div style="font-size:13.5px;color:#5a4a70;line-height:1.8">已结案件请及时立卷归档，当前待归档 <b>' + arch.length + '</b> 件。</div>' +
+    '<button class="btn sm ghost" style="margin-top:10px" data-quickadd="归档">＋ 登记归档</button></div>';
+  return h;
+}
+
+/* ---------- 任务列表 ---------- */
+function filteredTasks() {
+  let list = DB.tasks.slice();
+  if (fCat !== '全部') list = list.filter(t => t.cat === fCat);
+  if (q) {
+    const s = q.toLowerCase();
+    list = list.filter(t => (t.caseNo + t.caseName + t.cat + t.sub + JSON.stringify(t.extra)).toLowerCase().includes(s));
+  }
+  return sortByState(list);
+}
+function taskListHTML() {
+  const list = filteredTasks();
+  if (!list.length) return '<div class="empty"><span class="big">▤</span>没有匹配的任务</div>';
+  return '<div class="card tight">' + list.map(taskItem).join('') + '</div>';
+}
+function renderTasks() {
+  let h = '<div class="srch"><input id="q" placeholder="搜索案号 / 当事人 / 事项" value="' + esc(q) + '" autocomplete="off" enterkeyhint="search"></div>';
+  h += '<div class="cats" style="margin-bottom:12px"><button class="chip sm' + (fCat === '全部' ? ' on' : '') + '" data-fcat="全部">全部 ' + DB.tasks.length + '</button>';
+  CATS.forEach(c => {
+    const n = DB.tasks.filter(t => t.cat === c.k).length;
+    if (n) h += '<button class="chip sm' + (fCat === c.k ? ' on' : '') + '" data-fcat="' + c.k + '">' + c.ic + ' ' + c.k + ' ' + n + '</button>';
+  });
+  h += '</div>';
+  h += '<div id="taskList">' + taskListHTML() + '</div>';
+  return h;
+}
+
+/* ---------- 台账 ---------- */
+function cellVal(t, col) {
+  const e = t.extra || {};
+  switch (col.k) {
+    case 'seq': return e['回执序号'] || e.seqNo || '';
+    case 'caseNo': return t.caseNo || '';
+    case 'caseName': return t.caseName || '';
+    case 'obj': return e['标的物'] || '';
+    case 'party': return e['当事人'] || '';
+    case 'hearTime': return e['排庭时间'] || (t.steps[0] ? t.steps[0].due : '');
+    case 'remark': return e['备注'] || '';
+    case 'docType': return e['文书类型'] || t.sub;
+    case 'served': return progressOf(t);
+    case 'org': return e['被调查单位'] || '';
+    case 'back': return e['返回情况'] || '';
+    case 'item': return e['鉴定事项'] || '';
+    case 'prog': return progressOf(t);
+    case 'who': return e['上诉方'] || '';
+    case 'amount': return e['退费金额'] || '';
+    case 'reason': return e['扣除事由'] || '';
+    case 'end': return t.endDate || '';
+  }
+  return '';
+}
+
+function renderBoard() {
+  const b = BOARDS.find(x => x.k === curBoard) || BOARDS[0];
+  let rows = DB.tasks.filter(t => b.cats.includes(t.cat));
+  if (b.subs) rows = rows.filter(t => b.subs.includes(t.sub));
+  rows.sort((a, c) => (a.createdAt || '') < (c.createdAt || '') ? -1 : 1);
+
+  let h = '<div class="field"><select id="boardSel">' +
+    BOARDS.map(x => {
+      const n = DB.tasks.filter(t => x.cats.includes(t.cat) && (!x.subs || x.subs.includes(t.sub))).length;
+      return '<option value="' + x.k + '"' + (x.k === curBoard ? ' selected' : '') + '>' + x.name + '（' + n + '）</option>';
+    }).join('') + '</select></div>';
+
+  // 专属提示
+  if (curBoard === '排庭') {
+    const cnt = rows.filter(t => t.status !== 'done').length;
+    if (cnt > 5) h += '<div class="note warn"><b>排庭表已达 ' + cnt + ' 件</b>，超过 5 件，可联系送达人员开始移送送达。</div>';
+    else h += '<div class="note">当前待排庭 ' + cnt + ' 件，累计超过 5 件时软件会提示移送送达人员。</div>';
+  }
+  if (curBoard === '保全') h += '<div class="note">保全任务按"谈话→出裁定→提审批单→移送执行→执行立案"推进，状态自动生成，请每周跟进并更新。</div>';
+  if (curBoard === '线下调查') {
+    const byOrg = {};
+    rows.filter(t => t.status !== 'done').forEach(t => { const o = t.extra['被调查单位'] || '未填单位'; (byOrg[o] = byOrg[o] || []).push(t); });
+    const keys = Object.keys(byOrg);
+    if (keys.length) h += '<div class="card">' + keys.map(o => '<span class="pill">' + esc(o) + '：' + byOrg[o].length + ' 件</span>').join('') + '</div>';
+  }
+  if (curBoard === '退费') h += '<div class="note">进度：当事人提交全部材料 → 提审批系统 → 庭长签章 → 院长签字 → 通知当事人领取审批表。在任务详情中逐级推进。</div>';
+
+  if (!rows.length) {
+    h += '<div class="empty"><span class="big">▦</span>' + b.name + '暂无记录<br><span style="font-size:13px">录入相关任务后自动归类到此表</span></div>';
+    return h;
+  }
+  h += '<div class="stat-line"><span>共 <b>' + rows.length + '</b> 条</span><span>进行中 <b>' + rows.filter(t => t.status !== 'done').length + '</b></span><span>已完成 <b>' + rows.filter(t => t.status === 'done').length + '</b></span><span style="color:#8b96a5">← 左右滑动查看</span></div>';
+  h += '<div class="tbl-wrap"><table><thead><tr>' +
+    b.cols.map(c => '<th style="min-width:' + c.w + 'px">' + c.l + '</th>').join('') + '</tr></thead><tbody>';
+  rows.forEach(t => {
+    const st = stateOf(t);
+    const rowStyle = st === 'done' ? ' style="opacity:.55"' : (st === 'overdue' ? ' style="background:#fdf3f3"' : '');
+    h += '<tr data-open="' + t.id + '"' + rowStyle + '>' + b.cols.map(c => {
+      const v = cellVal(t, c);
+      let txt = v === '' ? '<span style="color:#c3cbd6">—</span>' : esc(v);
+      if (c.t === 'status' && v) {
+        const ok = /已送达|已完成|执行立案|谈话已完成/.test(v);
+        txt = '<span style="color:' + (ok ? '#1f7a4d' : '#2c5c8f') + '">' + esc(v) + '</span>';
+      }
+      return '<td' + (c.k === 'remark' || c.k === 'prog' ? ' class="wrap"' : '') + '>' + txt + '</td>';
+    }).join('') + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div style="font-size:12px;color:#8b96a5;margin-top:10px;text-align:center">点击任一行可查看详情、推进节点或编辑</div>';
+  return h;
+}
+
+/* ---------- 设置 ---------- */
+function renderSet() {
+  const total = DB.tasks.length;
+  const doing = DB.tasks.filter(t => t.status !== 'done').length;
+  const hols = Object.keys(DB.holidays).sort();
+  const byYear = {};
+  hols.forEach(d => { const y = d.slice(0, 4); (byYear[y] = byYear[y] || []).push(d); });
+
+  let h = '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:10px">数据概况</div>' +
+    '<div class="ov" style="margin-bottom:0"><div class="cell"><div class="v">' + total + '</div><div class="k">任务总数</div></div>' +
+    '<div class="cell o"><div class="v">' + doing + '</div><div class="k">进行中</div></div>' +
+    '<div class="cell g"><div class="v">' + (total - doing) + '</div><div class="k">已完成</div></div>' +
+    '<div class="cell"><div class="v">' + Object.keys(DB.holidays).length + '</div><div class="k">节假日</div></div></div></div>';
+
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:4px">期限计算基准</div>' +
+    '<div style="font-size:13px;color:#6b7787;line-height:1.7;margin-bottom:10px">按《民事诉讼法》第八十五条：期间开始的日不计入，自次日起算；届满日为法定休假日的，顺延至休假日后的第一个工作日。</div>' +
+    '<div class="field" style="margin-bottom:0"><label>每周集中跟进提醒日</label><select id="remindDay">' +
+    ['周日', '周一', '周二', '周三', '周四', '周五', '周六'].map((n, i) => '<option value="' + i + '"' + (i === DB.remindDay ? ' selected' : '') + '>' + n + '</option>').join('') +
+    '</select><div class="hint">保全进度、鉴定进度、待写文书、退费进度、线下调查将在该日集中提醒</div></div></div>';
+
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:8px">语音输入</div>' +
+    '<div style="font-size:13.5px;color:#3d4c5e;line-height:1.85">' +
+    (SPEECH_OK
+      ? '本机浏览器支持网页语音识别：在录入框点「🎤 语音」即可直接说话转成文字，再点一次结束。'
+      : '苹果手机 Safari 不支持网页语音识别，请使用<b>系统键盘听写</b>：点「🎤 语音」会弹出键盘，再点键盘上的麦克风图标说话即可，识别率很高。<br>开启方法：设置 → 通用 → 键盘 → 启用听写；建议同时勾选「自动标点符号」。') +
+    '</div>' +
+    (SPEECH_OK
+      ? '<button class="btn ghost sm" id="micGrant" style="margin-top:11px">' + (micReady ? '麦克风已授权 ✓' : '一键授权麦克风（只需一次，之后不再询问）') + '</button>'
+      : '') +
+    '</div>';
+
+  // 数据安全
+  const loc = (typeof location !== 'undefined' && location.origin) ? location.origin : '本地文件（file://）';
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:8px">数据安全</div>' +
+    '<div style="font-size:13px;color:#5b6b7f;line-height:1.85">' +
+    '数据保存在<b>浏览器</b>里，不在 HTML 文件中。替换或更新软件文件，数据不受影响。<br>' +
+    '但数据按网址隔离：<b>换了域名或路径就读不到旧数据</b>，请在固定地址使用。<br>' +
+    '当前地址：<b style="word-break:break-all">' + esc(loc) + '</b></div>' +
+    '<div style="font-size:12.5px;color:#6b7787;margin-top:11px;line-height:1.7">自动备份：每天首次打开自动存一份，保留最近 7 天<br>最近备份：<b>' + esc(lastBackupText()) + '</b></div>' +
+    '<div class="btn-row" style="margin-top:10px"><button class="btn ghost sm" id="backupNow">立即备份</button><button class="btn ghost sm" id="backupList">从备份恢复</button></div>' +
+    '<div style="font-size:11.5px;color:#9aa5b3;margin-top:9px">软件版本 ' + APP_VER + ' · 数据版本 v' + DB_VERSION + '</div></div>';
+
+  h += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:15px;font-weight:600">数据备份</div></div>' +
+    '<div style="font-size:13px;color:#6b7787;line-height:1.7;margin-bottom:12px">数据只保存在本机浏览器。建议每周导出一次备份，换手机或清理浏览器后可用备份恢复。</div>' +
+    '<div class="btn-row"><button class="btn ghost" id="expBtn">导出备份</button><button class="btn ghost" id="impBtn">导入备份</button></div>' +
+    '<input type="file" id="impFile" accept=".json,application/json" style="display:none">' +
+    '<div style="margin-top:12px"><button class="btn ghost" id="expCsvBtn" style="width:100%">导出台账（CSV / Excel 可打开）</button></div></div>';
+
+  // 多设备同步
+  const sy = DB.sync || {};
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:8px">多设备同步</div>';
+  if (!cryptoReady()) {
+    h += '<div class="note warn" style="margin-bottom:0">当前是本地文件方式打开，浏览器禁用了加密功能。请先部署到 GitHub Pages 等 HTTPS 地址，再使用同步。</div>';
+  } else if (!sy.token || !sy.gistId) {
+    h += '<div style="font-size:13px;color:#5b6b7f;line-height:1.8;margin-bottom:10px">让电脑和手机共用一份数据。上传前用你的密码加密，GitHub 上只有密文，看不到案件内容。<br>' +
+      '需要 GitHub Token（只勾 <b>gist</b> 权限）：GitHub → 头像 → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token。</div>' +
+      '<div class="field"><label>GitHub Token</label><input id="syToken" type="password" value="' + esc(sy.token || '') + '" placeholder="ghp_..." autocomplete="off"></div>' +
+      '<div class="field"><label>同步密码（加密用，务必记住）</label><input id="syPwd" type="password" value="' + esc(sy.pwd || '') + '" placeholder="至少 6 位" autocomplete="off"></div>' +
+      '<div class="field"><label>已有云端档案 ID（选填）</label><input id="syGist" value="' + esc(sy.gistId || '') + '" placeholder="另一台设备上创建的 gist id，留空则新建" autocomplete="off"></div>' +
+      '<button class="btn block" id="syConnect">连接并上传</button>';
+  } else {
+    h += '<div style="font-size:13px;color:#5b6b7f;margin-bottom:11px">已连接 · 上次同步 <b>' + esc(sy.lastAt ? sy.lastAt.replace('T', ' ').slice(0, 16) : '—') + '</b></div>' +
+      '<div class="btn-row"><button class="btn" id="syPush">上传到云端</button><button class="btn ghost" id="syPull">从云端恢复</button></div>' +
+      '<div class="hint" style="margin-top:9px">换设备时：先填同一组 Token 和密码，再点「从云端恢复」。</div>' +
+      '<div style="margin-top:10px"><button class="btn ghost sm" id="syDisconnect" style="color:#c62f2f">断开同步</button></div>';
+  }
+  h += '</div>';
+
+  // 分享给法官
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:8px">分享给法官</div>' +
+    '<div style="font-size:13px;color:#5b6b7f;line-height:1.8;margin-bottom:11px">生成只读的工作安排，法官可直接查看，但改不了你的数据，也看不到台账细节。</div>' +
+    '<div class="field" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#1d2733">' +
+    '<input type="checkbox" id="hideName" checked style="width:20px;height:20px">隐藏当事人姓名（显示为「张*」）</label></div>' +
+    '<div class="btn-row"><button class="btn ghost" id="briefCopy">复制今日简报</button><button class="btn ghost" id="briefView">导出只读看板</button></div>' +
+    '<div class="hint" style="margin-top:9px">简报可直接粘贴到微信发给法官；看板是单个 HTML 文件，法官用浏览器打开就能看，也可传到 GitHub Pages 后把链接发他。</div></div>';
+
+  h += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+    '<div style="font-size:15px;font-weight:600">法定节假日</div>' +
+    '<button class="btn sm ghost" id="holSync">检查更新</button></div>' +
+    '<div style="font-size:12.5px;color:#6b7787;margin-bottom:10px;line-height:1.7">已开启自动更新：每年国务院公布次年安排后，打开软件会自动补全。<br>上次更新：<b>' + esc(lastHolidaySyncText()) + '</b></div>';
+  Object.keys(byYear).sort().forEach(y => {
+    h += '<div style="margin-bottom:10px"><div style="font-size:12.5px;color:#6b7787;font-weight:600;margin-bottom:5px">' + y + ' 年</div>';
+    h += byYear[y].map(d => '<span class="pill" style="cursor:pointer" data-delhol="' + d + '">' + d.slice(5) + ' ' + esc(DB.holidays[d]) + ' ✕</span>').join('');
+    h += '</div>';
+  });
+  h += '<div style="margin-top:4px"><button class="btn sm ghost" id="addHoliday">＋ 手动添加</button></div>';
+  h += '<div class="hint" style="font-size:11.5px;color:#6b7787;line-height:1.6;margin-top:8px">数据来源：holiday-cn（收录国务院办公厅通知原文）。点标签可删除，删除后不会被自动补回。</div></div>';
+
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:10px">使用说明</div>' +
+    '<div style="font-size:13.5px;color:#3d4c5e;line-height:1.9">' +
+    '① 点底部 <b>＋</b>，用一句话描述任务，或切换"手动填写"精确选择。<br>' +
+    '② 软件按业务类别自动拆分流程节点并计算期限，遇周末和法定节假日自动顺延。<br>' +
+    '③ 「今日」页只显示逾期、今日到期、3 日内到期的事项，按红色→橙色→灰色排序。<br>' +
+    '④ 「台账」页汇总 12 类业务表格，点行可编辑。<br>' +
+    '⑤ 在 iPhone Safari 中打开后点"分享 → 添加到主屏幕"，可当 App 使用。</div></div>';
+
+  h += '<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:10px;color:#c62f2f">危险操作</div>' +
+    '<button class="btn danger block" id="clearBtn">清空全部数据</button>' +
+    '<div class="hint" style="margin-top:6px">清空前请先导出备份，删除后无法恢复</div></div>';
+
+  h += '<div style="text-align:center;font-size:11.5px;color:#a3adba;padding:16px 0 4px">法官助理工作台 · 本地离线运行 · v' + APP_VER + '</div>';
+  return h;
+}
+
+function openBackupList() {
+  const list = listBackups();
+  if (!list.length) { toast('还没有备份，可先点「立即备份」'); return; }
+  let h = '<div class="note">恢复会覆盖当前数据，建议先点「导出备份」另存一份。</div>';
+  h += '<div class="card tight">' + list.map(function (b) {
+    return '<div class="task" style="cursor:pointer" data-restore="' + b.key + '">' +
+      '<div class="l1"><div style="min-width:0;flex:1"><div class="cs">' + b.date + '</div></div></div>' +
+      '<div class="l2"><span class="tag">' + b.count + ' 条任务</span><span class="tag cat">点击恢复</span></div></div>';
+  }).join('') + '</div>';
+  openSheet('从备份恢复', h, '');
+}
+
+/* ========== 11. 弹层 ========== */
+function openSheet(title, body, foot) {
+  $('#sheetTitle').textContent = title;
+  $('#sheetBody').innerHTML = body;
+  $('#sheetFoot').innerHTML = foot || '';
+  $('#mask').classList.add('on');
+  $('#sheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() {
+  stopSpeech();
+  $('#mask').classList.remove('on');
+  $('#sheet').classList.remove('on');
+  document.body.style.overflow = '';
+}
+let toastTimer = null;
+function toast(msg) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2000);
+}
+
+/* ========== 11.5 语音输入 ==========
+   iPhone Safari 未实现 SpeechRecognition，自动降级为系统键盘听写引导 */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+// iOS / iPadOS：网页语音识别不可用或不可靠，强制走系统键盘听写
+const IS_IOS = /iPad|iPhone|iPod/.test((typeof navigator !== 'undefined' && navigator.userAgent) || '') ||
+  (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const SPEECH_OK = !IS_IOS && !!SR && window.isSecureContext !== false;
+let recog = null, listening = false, recogTargetId = null, recogBase = '', tipTimer = null, micReady = false, lastStartAt = 0;
+
+// 每次新建实例：复用旧实例在上一次结束后会卡在 ending 状态，导致 start() 抛错
+// 麦克风权限已由 ensureMic 预授权，浏览器按域名记住，不会再弹窗
+function getRecog() {
+  if (!SPEECH_OK) return null;
+  try {
+    const r = new SR();
+    r.lang = 'zh-CN';
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    return r;
+  } catch (e) { return null; }
+}
+
+// 一次性取得麦克风权限，之后浏览器会记住（同源）
+function ensureMic() {
+  if (micReady) return Promise.resolve(true);
+  let p = Promise.resolve(true);
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      p = navigator.permissions.query({ name: 'microphone' }).then(function (st) {
+        if (st.state === 'granted') { micReady = true; return true; }
+        return null;
+      }).catch(function () { return null; });
+    }
+  } catch (e) { }
+  return Promise.resolve(p).then(function (pre) {
+    if (pre === true) return true;
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+        try { s.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { }
+        micReady = true;
+        return true;
+      }).catch(function () { return false; });
+    }
+    return true;
+  });
+}
+
+function openKeyboard(el) {
+  if (!el) return;
+  // iOS 顺序：失焦 → 聚焦 → 光标置末尾 → 滚到可见，全部在用户手势内同步完成
+  try { if (document.activeElement === el) el.blur(); } catch (e) { }
+  try { el.focus(); } catch (e) { }
+  try { const n = (el.value || '').length; el.setSelectionRange(n, n); } catch (e) { }
+  try { el.scrollIntoView({ block: 'center' }); } catch (e) { }
+}
+
+function startSpeech(targetId) {
+  let el = document.getElementById(targetId);
+  // 面板若停在「手动填写」，自动切回「一句话录入」再聚焦
+  if (!el && !SPEECH_OK) {
+    if (typeof AD !== 'undefined' && AD) {
+      AD.mode = 'quick';
+      const sb = $('#sheetBody');
+      if (sb) sb.innerHTML = renderAddBody();
+      syncFoot();
+    }
+    el = document.getElementById(targetId);
+  }
+  if (!el) return;
+  // iPhone 等不支持网页语音 → 唤起系统键盘听写
+  if (!SPEECH_OK) {
+    openKeyboard(el);
+    showDictTip('键盘已打开 ▶ 点键盘上的 <b>🎤</b> 说话，说完点「完成」。<br>没有麦克风图标：设置 → 通用 → 键盘 → 启用听写。');
+    return;
+  }
+  if (listening) {
+    if (Date.now() - lastStartAt < 800) return; // 防连点误停
+    stopSpeech(); return;
+  }
+
+  const run = function () {
+    // 清理上一个实例，避免残留占用麦克风或卡在 ending 状态
+    if (recog) { try { recog.abort(); } catch (e) { } recog = null; }
+    listening = false; updateMicUI(false);
+    const r = getRecog();
+    if (!r) { el.focus(); showDictTip('语音识别不可用，请使用键盘输入。'); return; }
+    recog = r;
+    recogTargetId = targetId;
+    recogBase = el.value || '';
+    let hadResult = false, started = false;
+    const watchdog = setTimeout(function () {
+      if (!hadResult) {
+        showDictTip('语音服务没有响应。可能麦克风未授权，或当前网络无法用在线语音识别。建议直接点键盘上的 🎤 听写。');
+        stopSpeech();
+      }
+    }, 8000);
+    r.onstart = function () { listening = true; updateMicUI(true); };
+    r.onresult = function (ev) {
+      let interim = '', finalTxt = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const res = ev.results[i];
+        if (res.isFinal) finalTxt += res[0].transcript;
+        else interim += res[0].transcript;
+      }
+      hadResult = true; clearTimeout(watchdog);
+      if (finalTxt) recogBase += finalTxt;
+      const t = document.getElementById(recogTargetId);
+      if (t) {
+        t.value = recogBase + interim;
+        if (recogTargetId === 'nlpText') AD.text = t.value;
+      }
+    };
+    r.onerror = function (ev) {
+      listening = false; updateMicUI(false);
+      const err = ev.error;
+      if (err === 'not-allowed' || err === 'service-not-allowed')
+        showDictTip('麦克风未授权。请允许麦克风权限，或直接使用键盘听写。');
+      else if (err === 'network')
+        showDictTip('语音服务需要联网。可直接使用键盘上的 🎤 听写。');
+      else if (err === 'no-speech')
+        showDictTip('没有听到声音，请再说一次。');
+      else
+        showDictTip('语音识别中断，可改用键盘输入。');
+    };
+    r.onend = function () {
+      listening = false; updateMicUI(false); clearTimeout(watchdog);
+      if (recogTargetId === 'nlpText') {
+        const t = document.getElementById('nlpText');
+        if (t && t.value.trim()) applyParse(t.value);
+        else if (!hadResult) showDictTip('没有听到内容。请靠近麦克风再说一次，或直接打字／用键盘听写。');
+      }
+    };
+    lastStartAt = Date.now();
+    updateMicUI(true);
+    try { r.start(); }
+    catch (err) {
+      try { r.stop(); } catch (e2) { }
+      listening = false; updateMicUI(false);
+      setTimeout(function () {
+        try { r.start(); updateMicUI(true); lastStartAt = Date.now(); }
+        catch (e3) { listening = false; updateMicUI(false); el.focus(); showDictTip('启动失败，请直接打字或使用键盘听写。'); }
+      }, 200);
+    }
+  };
+
+  ensureMic().then(function (ok) {
+    if (!ok) { el.focus(); showDictTip('麦克风权限被拒绝。请在浏览器设置中允许本页面使用麦克风，或改用键盘听写。'); return; }
+    run();
+  });
+}
+function updateMicUI(on) {
+  const els = document.querySelectorAll('[data-mic]');
+  for (let i = 0; i < els.length; i++) {
+    const b = els[i];
+    if (on) { b.classList.add('rec'); b.innerHTML = '● 聆听中…'; }
+    else { b.classList.remove('rec'); b.innerHTML = SPEECH_OK ? '🎤 语音输入' : '🎤 打开键盘听写'; }
+  }
+}
+function showDictTip(text) {
+  const box = document.getElementById('dictTip');
+  if (!box) { toast(text.replace(/<[^>]+>/g, '')); return; }
+  box.innerHTML = '<div class="dict-tip">' + text + '</div>';
+  clearTimeout(tipTimer);
+  tipTimer = setTimeout(function () { if (document.getElementById('dictTip')) document.getElementById('dictTip').innerHTML = ''; }, 15000);
+}
+function stopSpeech() {
+  if (recog) { try { recog.stop(); } catch (e) { } }
+  listening = false; updateMicUI(false);
+}
+
+/* ========== 12. 录入 ========== */
+let AD = null;
+const defAD = () => ({ cat: '', sub: '', caseNo: '', caseName: '', start: todayStr(), endDate: '', extra: {}, needFix: false, customDays: null, dueMode: 'relative', absDue: '', talkInfo: '', linkHits: [], linkMode: '', linkTask: '' });
+
+// 查找同案件的谈话任务，把谈话日作为后续环节的起算日
+function autoLinkTalk() {
+  AD.talkInfo = '';
+  if (AD.dueMode === 'absolute') return;
+  if (!AD.caseNo && !AD.caseName) return;
+  let talkSub = '';
+  if (AD.sub === '首次保全') talkSub = '保全谈话';
+  else if (AD.sub === '提鉴定系统') talkSub = '鉴定谈话';
+  if (!talkSub) return;
+  const hit = DB.tasks.find(t => t.sub === talkSub && t.status !== 'done' &&
+    ((AD.caseNo && t.caseNo && t.caseNo === AD.caseNo) || (AD.caseName && t.caseName && t.caseName === AD.caseName)));
+  if (hit && hit.steps[0]) {
+    AD.start = hit.steps[0].due;
+    AD.talkInfo = '已自动填入起算日：' + hit.steps[0].due + '（来自该案件的' + talkSub + '）';
+  }
+}
+
+function fieldDefs(cat, sub) {
+  const map = {
+    '保全': [{ k: '标的物', ph: '如：银行存款 50 万 / 房产一处' }, { k: '回执序号', ph: '留空自动编号' }],
+    '排庭': [{ k: '当事人', ph: '原告、被告' }, { k: '排庭时间', type: 'date' }],
+    '送达': [{ k: '文书类型', ph: sub || '判决书' }],
+    '调查': [{ k: '被调查单位', ph: '如：招商银行北京分行' }],
+    '鉴定': [{ k: '鉴定事项', ph: '如：伤残等级鉴定' }],
+    '移送上诉': [{ k: '上诉方', ph: '上诉人姓名' }],
+    '制作文书': [{ k: '文书类型', ph: '如：民事判决书' }],
+    '退费': [{ k: '退费金额', ph: '如：2300 元' }],
+    '审限扣除与报结': [{ k: '扣除事由', ph: '如：公告送达 / 鉴定期间' }],
+    '归档': [],
+    '文书校核': [{ k: '文书类型', ph: '如：民事判决书' }]
+  };
+  return map[cat] || [];
+}
+function fieldInput(f, val, attr) {
+  const t = f.type === 'date' ? ' type="date"' : '';
+  return '<div class="field"><label>' + esc(f.k) + '</label><input' + t + ' ' + attr + '="' + esc(f.k) + '" value="' + esc(val || '') + '" placeholder="' + esc(f.ph || '') + '"></div>';
+}
+
+/* ---- 识别到已有案件：补充信息 / 新建任务 分流 ---- */
+function findLinkHits(p) {
+  if (!p.caseNo && !p.caseName) return [];
+  const act = DB.tasks.filter(t => t.status !== 'done');
+  let hits = [];
+  if (p.caseNo) {
+    hits = act.filter(t => t.caseNo && (t.caseNo === p.caseNo ||
+      (p.caseNo.length >= 3 && t.caseNo.includes(p.caseNo)) ||
+      (t.caseNo.length >= 3 && p.caseNo.includes(t.caseNo))));
+  }
+  if (!hits.length && p.caseName && p.caseName.length >= 2) {
+    hits = act.filter(t => t.caseName && (t.caseName === p.caseName ||
+      t.caseName.includes(p.caseName) || p.caseName.includes(t.caseName)));
+  }
+  return hits;
+}
+function renderLinkPrompt() {
+  if (!AD.linkHits || !AD.linkHits.length || AD.linkMode === 'new') return '';
+  const names = [];
+  AD.linkHits.forEach(t => { const n = t.caseName || t.caseNo; if (n && names.indexOf(n) < 0) names.push(n); });
+  return '<div class="card" style="border-color:#b9cde6;background:#f7fbff;margin-bottom:12px">' +
+    '<div style="font-size:13.5px;font-weight:600;margin-bottom:4px">识别到已有案件：' + esc(names.slice(0, 3).join('、')) + '</div>' +
+    '<div style="font-size:12.5px;color:#5b6b7f;line-height:1.6;margin-bottom:10px">找到 ' + AD.linkHits.length + ' 条在办任务。这句话是补充案件信息，还是新任务？</div>' +
+    '<div class="btn-row"><button class="btn sm" data-linkmode="update">补充到已有案件</button>' +
+    '<button class="btn sm ghost" data-linkmode="new">作为新任务</button></div></div>';
+}
+function renderUpdateBody() {
+  const t = DB.tasks.find(x => x.id === AD.linkTask) || (AD.linkHits && AD.linkHits[0]);
+  if (!t) return '<div class="empty">未找到任务</div>';
+  const pend = (t.steps || []).filter(s => !s.done);
+  let h = '<button class="btn ghost sm" data-linkmode="back" style="margin-bottom:12px">‹ 返回</button>';
+  h += '<div class="card" style="margin-bottom:12px;border-color:#b9cde6;background:#f7fbff"><div style="font-size:15px;font-weight:600">' + esc(t.caseNo || '未填案号') + '</div>' +
+    '<div style="font-size:13px;color:#6b7787;margin-top:3px">' + esc(t.caseName || '') + '　·　' + esc(progressOf(t)) + '</div></div>';
+  if (AD.linkHits.length > 1) {
+    h += '<div class="field"><label>要更新哪条任务（' + AD.linkHits.length + ' 条）</label><div class="cats">' +
+      AD.linkHits.map(x => '<button class="chip sm' + (x.id === t.id ? ' on' : '') + '" data-linktask="' + x.id + '">' + esc(x.sub) + '</button>').join('') +
+      '</div></div>';
+  }
+  h += '<div class="row2">' +
+    '<div class="field"><label>案号</label><input id="updCaseNo" value="' + esc(AD.caseNo || t.caseNo) + '" placeholder="案号"></div>' +
+    '<div class="field"><label>案件名</label><input id="updCaseName" value="' + esc(AD.caseName || t.caseName) + '" placeholder="当事人"></div>' +
+    '</div>';
+  h += '<div class="field"><label>记录内容</label><textarea id="updText" rows="3">' + esc(AD.text || '') + '</textarea>' +
+    '<div class="hint">会追加到该任务的办理记录，可修改后保存</div></div>';
+  h += '<div class="field"><label>同时标记节点完成（可选）</label><select id="updStep"><option value="">仅记录进度，不改节点</option>' +
+    pend.map(s => '<option value="' + esc(s.n) + '">' + esc(s.n) + '（原定 ' + esc(s.due) + '）</option>').join('') +
+    '</select></div>';
+  return h;
+}
+// 把一条记录写入已有任务（可同时改案号/案件名、标记节点完成）
+function saveUpdate() {
+  const t = DB.tasks.find(x => x.id === AD.linkTask);
+  if (!t) { toast('请选择要更新的任务'); return; }
+  const ta = $('#updText'), sel = $('#updStep'), cnEl = $('#updCaseNo'), nmEl = $('#updCaseName');
+  const txt = ta ? String(ta.value || '').trim() : '';
+  const stepName = sel ? sel.value : '';
+  const newNo = cnEl ? String(cnEl.value || '').trim() : '';
+  const newNm = nmEl ? String(nmEl.value || '').trim() : '';
+  const changed = [];
+  if (newNo && newNo !== t.caseNo) { t.caseNo = newNo; changed.push('案号'); }
+  if (newNm && newNm !== t.caseName) { t.caseName = newNm; changed.push('案件名'); }
+  if (!txt && !stepName && !changed.length) { toast('请填写要补充的内容'); return; }
+  t.logs = t.logs || [];
+  if (txt) t.logs.push({ t: todayStr(), text: txt });
+  if (stepName) {
+    const s = (t.steps || []).find(x => x.n === stepName);
+    if (s) { s.done = true; s.doneAt = todayStr(); recalc(t); }
+  }
+  saveDB(); closeSheet(); render();
+  const parts = [];
+  if (changed.length) parts.push('更新' + changed.join('、'));
+  if (stepName) parts.push(stepName + '已完成');
+  if (!parts.length && txt) parts.push('已记录');
+  toast('已更新「' + (t.caseName || t.caseNo || '任务') + '」' + (parts.length ? '：' + parts.join('，') : ''));
+}
+function syncFoot() {
+  const f = $('#sheetFoot');
+  if (!f) return;
+  f.innerHTML = '<button class="btn block" id="saveTask">' + (AD.linkMode === 'update' ? '保存记录到该案件' : '保存任务') + '</button>';
+}
+
+function renderAddBody() {
+  if (AD.linkMode === 'update') return renderUpdateBody();
+  let h = '<div class="seg"><button data-mode="quick" class="' + (AD.mode === 'quick' ? 'on' : '') + '">一句话录入</button><button data-mode="manual" class="' + (AD.mode === 'manual' ? 'on' : '') + '">手动填写</button></div>';
+
+  if (AD.mode === 'quick') {
+    h += '<div class="field">' +
+      '<label>描述这件工作</label>' +
+      '<textarea id="nlpText" rows="3" placeholder="例：(2026)京0105民初1234号 张三诉李四 今天收到起诉状 要送达被告">' + esc(AD.text || '') + '</textarea>' +
+      '<div class="mic-row"><button type="button" class="mic" data-mic="nlpText">' + (SPEECH_OK ? '🎤 语音输入' : '🎤 打开键盘听写') + '</button></div>' +
+      '<div id="dictTip"></div>' +
+      '<div class="hint" id="nlpHint">' + (SPEECH_OK
+        ? '点「🎤 语音输入」直接说话，自动转成文字；也可以打字'
+        : '点「🎤 语音输入」会打开键盘，再点键盘上的麦克风图标说话') + '</div></div>' +
+      '<button class="btn ghost block" id="parseBtn">识别并预览 ›</button>';
+    if (!AD.parsed && !AD.cat) return h;
+    h += '<div style="height:14px"></div>';
+  }
+
+  if (AD.parsed) {
+    h += renderLinkPrompt();
+    const known = AD.cat && AD.sub;
+    h += '<div class="note' + (known ? '' : ' warn') + '">' + (known
+      ? '已识别：<b>' + esc(AD.cat) + (AD.sub !== AD.cat ? ' · ' + esc(AD.sub) : '') + '</b>' + (AD.start ? '，起算日 <b>' + esc(AD.start) + '</b>' : '')
+      : '未识别出业务类别，请在下方手动选择') + '</div>';
+  }
+
+  const catDef = CATS.find(c => c.k === AD.cat);
+  h += '<div class="field"><label>业务类别</label><div class="cats">';
+  CATS.forEach(c => h += '<button class="chip' + (AD.cat === c.k ? ' on' : '') + '" data-setcat="' + c.k + '">' + c.ic + ' ' + c.k + '</button>');
+  h += '</div></div>';
+
+  if (catDef) {
+    h += '<div class="field"><label>具体事项</label><div class="cats">';
+    catDef.subs.forEach(s => h += '<button class="chip sm' + (AD.sub === s ? ' on' : '') + '" data-setsub="' + s + '">' + s + '</button>');
+    h += '</div></div>';
+  }
+
+  h += '<div class="field"><label>案号</label><input data-f="__caseNo" value="' + esc(AD.caseNo) + '" placeholder="(2026)京0105民初1234号" autocomplete="off"></div>';
+  h += '<div class="field"><label>案件名 / 当事人</label><input data-f="__caseName" value="' + esc(AD.caseName) + '" placeholder="张三诉李四民间借贷" autocomplete="off"></div>';
+
+  h += '<div class="field"><label>' + (AD.sub === '首次保全' || AD.sub === '提鉴定系统' ? '起算日（谈话完成日）' : '起算日（任务发生日）') + '</label>' +
+    '<input type="date" data-f="__start" value="' + esc(AD.start) + '"><div class="hint">期限自次日起算，遇周末/法定节假日顺延</div>' +
+    (AD.talkInfo ? '<div class="note" style="margin:8px 0 0;font-size:12.5px">' + esc(AD.talkInfo) + '</div>' : '') + '</div>';
+
+  h += '<div class="field"><label>期限方式</label><div class="cats">' +
+    '<button type="button" class="chip sm' + (AD.dueMode !== 'absolute' ? ' on' : '') + '" data-duemode="relative">按预设期限</button>' +
+    '<button type="button" class="chip sm' + (AD.dueMode === 'absolute' ? ' on' : '') + '" data-duemode="absolute">指定完成日期</button>' +
+    '</div>';
+  if (AD.dueMode === 'absolute') {
+    h += '<div style="margin-top:9px"><input type="date" data-f="__absDue" value="' + esc(AD.absDue) + '">' +
+      '<div class="hint">该日即为本事项办结日，不再按预设天数推算；后续环节以该日为基准</div></div>';
+  }
+  h += '</div>';
+
+  if (AD.sub === '续行保全') {
+    h += '<div class="field"><label>保全到期日</label><input type="date" data-f="__endDate" value="' + esc(AD.endDate) + '"><div class="hint">软件将倒推 32 日作为制作裁定的期限</div></div>';
+  }
+
+  fieldDefs(AD.cat, AD.sub).forEach(f => {
+    h += fieldInput(f, AD.extra[f.k], 'data-f');
+  });
+
+  if (AD.cat && AD.sub) {
+    const preset = (ruleOf({ cat: AD.cat, sub: AD.sub }).steps || [])[0];
+    const presetTxt = preset ? (preset.off + (preset.unit === 'w' ? ' 个工作日' : ' 个自然日')) : '—';
+    h += '<div class="field"><label>自定义期限（选填）</label>' +
+      '<input type="number" inputmode="numeric" min="0" data-f="__customDays" value="' + (AD.customDays === null || AD.customDays === undefined ? '' : AD.customDays) + '" placeholder="留空按预设：' + esc(presetTxt) + '">' +
+      '<div class="hint">填写后仅覆盖第一个节点的期限，填 0 表示当日办结</div></div>';
+  }
+
+  if (AD.cat === '移送上诉' && AD.sub === '送达上诉状副本并开具上诉费缴费单') {
+    h += '<div class="field"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#1d2733">' +
+      '<input type="checkbox" data-f="__needFix"' + (AD.needFix ? ' checked' : '') + ' style="width:20px;height:20px">需当事人补正上诉状</label>' +
+      '<div class="hint">勾选后增加"3个工作日后确认补正材料"提醒节点</div></div>';
+  }
+
+  h += '<div id="pvBox"></div>';
+  return h;
+}
+
+function updatePreview() {
+  const box = $('#pvBox');
+  if (!box) return;
+  if (!AD.cat || !AD.sub) { box.innerHTML = ''; return; }
+  const bak = DB.seq['保全'];
+  const tmp = makeTask({ cat: AD.cat, sub: AD.sub, caseNo: AD.caseNo, caseName: AD.caseName, start: AD.start, endDate: AD.endDate, customDays: AD.customDays, dueMode: AD.dueMode, absDue: AD.absDue, extra: Object.assign({}, AD.extra, AD.needFix ? { '需补正': true } : {}) });
+  DB.seq['保全'] = bak;
+  if (!tmp.steps.length && tmp.cat !== '退费') { box.innerHTML = ''; return; }
+  let h = '<div class="card" style="background:#fafbfd;margin-top:6px"><div style="font-size:13px;font-weight:600;color:#44536a;margin-bottom:9px">期限预览</div>';
+  if (tmp.cat === '退费') {
+    h += '<div style="font-size:13.5px;color:#3d4c5e">按 5 个环节推进：' + (ruleOf(tmp).flow || []).join(' → ') + '</div>';
+  } else {
+    h += '<div class="tl">' + tmp.steps.map((s, i) => {
+      const n = diffDays(s.due, todayStr());
+      return '<div class="nd' + (i === 0 ? ' now' : '') + '"><div class="nm">' + esc(s.n) + (s.opt ? ' <span class="tag wk">可选</span>' : '') + '</div>' +
+        '<div class="dt">' + fmtFull(s.due) + '　<span style="color:' + (n < 0 ? '#c62f2f' : n <= 3 ? '#b26800' : '#8b96a5') + '">' +
+        (n < 0 ? '已逾期' + (-n) + '天' : n === 0 ? '今日到期' : '剩' + n + '天') + '</span></div></div>';
+    }).join('') + '</div>';
+  }
+  h += '</div>';
+  box.innerHTML = h;
+}
+
+function openAdd() {
+  AD = defAD(); AD.mode = 'quick'; AD.text = ''; AD.parsed = false;
+  openSheet('录入任务', renderAddBody(), '<button class="btn block" id="saveTask">保存任务</button>');
+  updatePreview();
+}
+
+// 解析文本并回填到录入面板（按钮与语音共用）
+function applyParse(txt) {
+  const p = parseInput(txt);
+  AD.text = txt; AD.parsed = true;
+  AD.cat = p.cat || AD.cat; AD.sub = p.sub || AD.sub;
+  AD.caseNo = p.caseNo || '';
+  AD.caseName = p.caseName || '';
+  AD.start = p.start || todayStr(); AD.endDate = p.endDate || '';
+  AD.absDue = p.absDue || ''; AD.dueMode = p.dueMode || 'relative';
+  AD.extra = Object.assign({}, p.extra || {});
+  AD.needFix = !!p.extra['需补正'];
+  const rawTxt = String(txt || '');
+  // 打分排序：语音里点名的节点 > 同类业务 > 同子类
+  const nodeScore = function (t) {
+    return (t.steps || []).some(function (s) { return !s.done && s.n && rawTxt.indexOf(s.n) >= 0; }) ? 4 : 0;
+  };
+  AD.linkHits = findLinkHits(p).sort(function (x, y) {
+    const sx = nodeScore(x) + (p.cat && x.cat === p.cat ? 2 : 0) + (p.sub && x.sub === p.sub ? 1 : 0);
+    const sy = nodeScore(y) + (p.cat && y.cat === p.cat ? 2 : 0) + (p.sub && y.sub === p.sub ? 1 : 0);
+    return sy - sx;
+  });
+  AD.linkMode = '';
+  AD.linkTask = AD.linkHits.length ? AD.linkHits[0].id : '';
+  autoLinkTalk();
+  const sb = $('#sheetBody');
+  if (sb) sb.innerHTML = renderAddBody();
+  syncFoot();
+  updatePreview();
+  if (p.warns.length) toast(p.warns[0]);
+}
+
+function openAddFromParse(text) {
+  AD = defAD();
+  const p = parseInput(text);
+  AD.mode = 'quick'; AD.text = text; AD.parsed = true;
+  AD.cat = p.cat; AD.sub = p.sub; AD.caseNo = p.caseNo; AD.caseName = p.caseName;
+  AD.start = p.start; AD.endDate = p.endDate || '';
+  AD.extra = p.extra || {};
+  AD.needFix = !!p.extra['需补正'];
+  openSheet('录入任务', renderAddBody(), '<button class="btn block" id="saveTask">保存任务</button>');
+  setTimeout(updatePreview, 0);
+}
+
+/* ========== 13. 详情 ========== */
+function openDetail(id) {
+  const t = DB.tasks.find(x => x.id === id);
+  if (!t) return;
+  const rule = ruleOf(t);
+  let h = '<div class="field"><label>案号</label><input data-e="caseNo" value="' + esc(t.caseNo) + '"></div>' +
+    '<div class="field"><label>案件名 / 当事人</label><input data-e="caseName" value="' + esc(t.caseName) + '"></div>' +
+    '<div class="field"><label>起算日</label><input type="date" data-e="start" value="' + esc(t.start) + '"></div>' +
+    '<div class="field"><label>期限方式</label><div class="cats">' +
+    '<button type="button" class="chip sm' + (t.dueMode !== 'absolute' ? ' on' : '') + '" data-tdm="relative">按预设期限</button>' +
+    '<button type="button" class="chip sm' + (t.dueMode === 'absolute' ? ' on' : '') + '" data-tdm="absolute">指定完成日期</button>' +
+    '</div>' +
+    (t.dueMode === 'absolute'
+      ? '<div style="margin-top:9px"><input type="date" data-e="absDue" value="' + esc(t.absDue) + '"><div class="hint">该日为办结日，不顺延</div></div>'
+      : '') +
+    '</div>';
+  if (t.sub === '续行保全') h += '<div class="field"><label>保全到期日</label><input type="date" data-e="endDate" value="' + esc(t.endDate) + '"></div>';
+  fieldDefs(t.cat, t.sub).forEach(f => {
+    h += fieldInput(f, t.extra[f.k], 'data-x');
+  });
+  if (t.cat !== '退费') {
+    const rule0 = (ruleOf(t).steps || [])[0];
+    h += '<div class="field"><label>自定义期限（工作日，留空用预设）</label>' +
+      '<input type="number" inputmode="numeric" min="0" data-e="customDays" value="' + (t.customDays === null || t.customDays === undefined ? '' : t.customDays) + '" placeholder="预设 ' + (rule0 ? esc(rule0.off + (rule0.unit === 'w' ? ' 个工作日' : ' 个自然日')) : '—') + '"></div>';
+  }
+  if (t.cat === '移送上诉' && rule.optStep) {
+    h += '<div class="field"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#1d2733"><input type="checkbox" data-x="需补正"' + (t.extra['需补正'] ? ' checked' : '') + ' style="width:20px;height:20px">需当事人补正上诉状</label></div>';
+  }
+
+  h += '<div class="card" style="background:#fafbfd;margin:14px 0"><div style="font-size:13px;font-weight:600;color:#44536a;margin-bottom:12px">流程节点</div>';
+  if (t.cat === '退费') {
+    const f = rule.flow || [];
+    h += '<div class="tl">' + f.map((n, i) => '<div class="nd' + (i < (t.flow || 0) ? ' done' : i === (t.flow || 0) ? ' now' : '') + '"><div class="nm">' + esc(n) + '</div>' +
+      (i === (t.flow || 0) ? '<div class="dt">当前环节</div>' : '') + '</div>').join('') + '</div>';
+  } else if (!t.steps.length) {
+    h += '<div style="font-size:13px;color:#8b96a5">该类别无期限节点</div>';
+  } else {
+    h += '<div class="tl">' + t.steps.map(s => {
+      const st = s.done ? 'done' : (diffDays(s.due, todayStr()) <= 0 ? 'now' : '');
+      return '<div class="nd ' + st + '"><div class="nm">' + esc(s.n) + '</div>' +
+        '<div class="dt">' + fmtFull(s.due) + (s.done ? '　<span style="color:#1f7a4d">✓ ' + esc(s.doneAt) + ' 完成</span>' : '') + '</div>' +
+        (!s.done ? '<button class="chk" style="margin-top:6px;padding:4px 10px;font-size:12.5px" data-stepdone="' + t.id + '|' + esc(s.n) + '">标记完成</button>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card" style="background:#fafbfd;margin:0 0 14px"><div style="font-size:13px;font-weight:600;color:#44536a;margin-bottom:8px">办理记录</div>';
+  if (t.logs && t.logs.length) {
+    h += t.logs.slice().reverse().map(l => '<div style="font-size:13px;padding:5px 0;border-bottom:1px solid #eef1f5;color:#3d4c5e"><span style="color:#8b96a5;font-size:12px">' + esc(l.t) + '</span>　' + esc(l.text) + '</div>').join('');
+  } else h += '<div style="font-size:13px;color:#8b96a5">暂无记录</div>';
+  h += '<div style="display:flex;gap:8px;margin-top:9px"><input id="logInput" placeholder="记录一句进度，如：已联系承办人" style="flex:1;padding:9px 11px;font-size:15px;border:1px solid #d3dae5;border-radius:8px;font-family:inherit"><button type="button" class="mic" data-mic="logInput">🎤</button><button class="btn sm" id="addLog">添加</button></div><div id="dictTip"></div></div>';
+
+  const foot = '<div class="btn-row"><button class="btn ghost" id="delTask" style="flex:0 0 84px;color:#c62f2f;border-color:#edc9c9">删除</button>' +
+    '<button class="btn" id="toggleDone">' + (t.status === 'done' ? '恢复为进行中' : '标记整个任务完成') + '</button></div>';
+
+  openSheet(t.cat + (t.sub !== t.cat ? ' · ' + t.sub : ''), h, foot);
+  $('#sheet').dataset.tid = t.id;
+  $('#sheet').dataset.mode = 'detail';
+}
+
+/* ========== 14. 事件 ========== */
+function render() {
+  const v = $('#view');
+  let title = '今日工作台';
+  if (curTab === 'today') { v.innerHTML = renderToday(); title = '今日工作台'; }
+  else if (curTab === 'tasks') { v.innerHTML = renderTasks(); title = '全部任务'; }
+  else if (curTab === 'board') { v.innerHTML = renderBoard(); title = '业务台账'; }
+  else if (curTab === 'set') { v.innerHTML = renderSet(); title = '设置'; }
+  $('#hTitle').textContent = title;
+  const d = new Date();
+  $('#hDate').textContent = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  $('#hWeek').textContent = WEEKCN[d.getDay()] === '日' ? '周日' : '周' + WEEKCN[d.getDay()];
+  document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === curTab));
+}
+
+document.addEventListener('click', e => {
+  // —— 最高优先级：这两个必须先处理，避免被其他委托规则吃掉 ——
+  if (e.target.closest('#sheetX')) { e.preventDefault(); closeSheet(); return; }
+  const micHit = e.target.closest('[data-mic]');
+  if (micHit) { e.preventDefault(); e.stopPropagation(); startSpeech(micHit.dataset.mic); return; }
+  if (e.target.id === 'mask') { closeSheet(); return; }
+
+  const tb = e.target.closest('.tabbar button');
+  if (tb) {
+    if (tb.dataset.tab === 'add') { openAdd(); return; }
+    curTab = tb.dataset.tab;
+    q = ''; fCat = '全部';
+    render(); window.scrollTo(0, 0); return;
+  }
+  // 快捷登记（月度提醒卡片）
+  const qa = e.target.closest('[data-quickadd]');
+  if (qa) {
+    openAdd();
+    AD.mode = 'manual';
+    AD.cat = qa.dataset.quickadd;
+    const c = CATS.find(x => x.k === AD.cat);
+    if (c) AD.sub = c.subs[0];
+    $('#sheetBody').innerHTML = renderAddBody();
+    updatePreview();
+    return;
+  }
+  // 打开详情
+  const op = e.target.closest('[data-open]');
+  if (op && !e.target.closest('[data-done]') && !e.target.closest('[data-flow]')) { openDetail(op.dataset.open); return; }
+  // 完成节点
+  const dn = e.target.closest('[data-done]');
+  if (dn) {
+    e.stopPropagation();
+    const t = DB.tasks.find(x => x.id === dn.dataset.done);
+    if (t) {
+      const nx = nextStep(t); if (!nx) return;
+      nx.done = true; nx.doneAt = todayStr();
+      t.logs = t.logs || []; t.logs.push({ t: todayStr(), text: '完成「' + nx.n + '」' });
+      recalc(t); saveDB(); render(); toast('已完成：' + nx.n);
+    }
+    return;
+  }
+  // 退费推进
+  const fl = e.target.closest('[data-flow]');
+  if (fl) {
+    e.stopPropagation();
+    const t = DB.tasks.find(x => x.id === fl.dataset.flow);
+    if (t) {
+      const f = ruleOf(t).flow || [];
+      if ((t.flow || 0) < f.length - 1) {
+        t.flow = (t.flow || 0) + 1;
+        t.logs = t.logs || []; t.logs.push({ t: todayStr(), text: '进度推进至：' + f[t.flow] });
+        saveDB(); render(); toast('已推进至：' + f[t.flow]);
+      } else { toast('已到最后一个环节，可标记完成'); }
+    }
+    return;
+  }
+  // 详情内节点完成
+  const sd = e.target.closest('[data-stepdone]');
+  if (sd) {
+    const [tid, sname] = sd.dataset.stepdone.split('|');
+    const t = DB.tasks.find(x => x.id === tid);
+    const s = t && t.steps.find(x => x.n === sname);
+    if (s) {
+      s.done = true; s.doneAt = todayStr();
+      t.logs = t.logs || []; t.logs.push({ t: todayStr(), text: '完成「' + s.n + '」' });
+      recalc(t); saveDB(); closeSheet(); render(); toast('已完成：' + s.n);
+    }
+    return;
+  }
+  // 任务筛选
+  const fc = e.target.closest('[data-fcat]');
+  if (fc) { fCat = fc.dataset.fcat; render(); return; }
+  // 类别选择
+  const sc = e.target.closest('[data-setcat]');
+  if (sc) {
+    AD.cat = sc.dataset.setcat;
+    const c = CATS.find(x => x.k === AD.cat);
+    if (c && !c.subs.includes(AD.sub)) AD.sub = c.subs[0];
+    $('#sheetBody').innerHTML = renderAddBody(); updatePreview(); return;
+  }
+  const ss = e.target.closest('[data-setsub]');
+  if (ss) {
+    AD.sub = ss.dataset.setsub;
+    autoLinkTalk();
+    $('#sheetBody').innerHTML = renderAddBody(); updatePreview(); return;
+  }
+  // 补充到已有案件 / 改为新任务
+  const lm = e.target.closest('[data-linkmode]');
+  if (lm) {
+    const m = lm.dataset.linkmode;
+    if (m === 'update') {
+      AD.linkMode = 'update';
+      if (!AD.linkTask && AD.linkHits && AD.linkHits[0]) AD.linkTask = AD.linkHits[0].id;
+    } else if (m === 'new') { AD.linkMode = 'new'; }
+    else { AD.linkMode = ''; }
+    $('#sheetBody').innerHTML = renderAddBody(); syncFoot(); updatePreview();
+    return;
+  }
+  const lt = e.target.closest('[data-linktask]');
+  if (lt) {
+    AD.linkTask = lt.dataset.linktask;
+    $('#sheetBody').innerHTML = renderAddBody(); syncFoot();
+    return;
+  }
+  // 期限方式切换（录入面板）
+  const dm = e.target.closest('[data-duemode]');
+  if (dm) {
+    AD.dueMode = dm.dataset.duemode;
+    if (AD.dueMode === 'absolute' && !AD.absDue) AD.absDue = AD.start;
+    $('#sheetBody').innerHTML = renderAddBody(); updatePreview(); return;
+  }
+  // 期限方式切换（详情面板）
+  const tdm = e.target.closest('[data-tdm]');
+  if (tdm) {
+    const tt = DB.tasks.find(x => x.id === $('#sheet').dataset.tid);
+    if (tt) {
+      tt.dueMode = tdm.dataset.tdm;
+      if (tt.dueMode === 'absolute' && !tt.absDue) tt.absDue = tt.start;
+      recalc(tt); saveDB(); openDetail(tt.id);
+    }
+    return;
+  }
+  // 模式切换（限定在顶部切换条内，避免误触）
+  const md = e.target.closest('.seg button[data-mode]');
+  if (md) { AD.mode = md.dataset.mode; $('#sheetBody').innerHTML = renderAddBody(); updatePreview(); return; }
+  // 解析
+  if (e.target.id === 'parseBtn') {
+    const txt = ($('#nlpText') || {}).value || '';
+    if (!txt.trim()) { toast('请先描述这件工作'); return; }
+    applyParse(txt);
+    return;
+  }
+  // 保存任务
+  if (e.target.id === 'saveTask') {
+    if (AD.linkMode === 'update') { saveUpdate(); return; }
+    if (!AD.cat) { toast('请选择业务类别'); return; }
+    if (!AD.sub) { toast('请选择具体事项'); return; }
+    const t = makeTask({ cat: AD.cat, sub: AD.sub, caseNo: AD.caseNo, caseName: AD.caseName, start: AD.start, endDate: AD.endDate, customDays: AD.customDays, dueMode: AD.dueMode, absDue: AD.absDue, extra: Object.assign({}, AD.extra, AD.needFix ? { '需补正': true } : {}) });
+    t.logs = [{ t: todayStr(), text: '创建任务' }];
+    DB.tasks.push(t); saveDB(); closeSheet(); render();
+    if (t.sub === '保全谈话' || t.sub === '鉴定谈话') {
+      toast('已记录' + t.sub + '（' + t.steps[0].due + '），后续环节将以此日起算');
+    } else {
+      toast('已归类：' + t.cat + ' · ' + t.sub);
+    }
+    return;
+  }
+  // 详情操作
+  if (e.target.id === 'toggleDone') {
+    const t = DB.tasks.find(x => x.id === $('#sheet').dataset.tid);
+    if (t) { t.status = t.status === 'done' ? 'doing' : 'done'; saveDB(); closeSheet(); render(); toast(t.status === 'done' ? '任务已完成' : '已恢复'); }
+    return;
+  }
+  if (e.target.id === 'delTask') {
+    const tid = $('#sheet').dataset.tid;
+    const t = DB.tasks.find(x => x.id === tid);
+    if (t && confirm('确定删除任务「' + (t.caseNo || '未填案号') + ' · ' + t.sub + '」？删除后不可恢复。')) {
+      DB.tasks = DB.tasks.filter(x => x.id !== tid); saveDB(); closeSheet(); render(); toast('已删除');
+    }
+    return;
+  }
+  if (e.target.id === 'addLog') {
+    const inp = $('#logInput'); const txt = (inp.value || '').trim();
+    if (!txt) return;
+    const t = DB.tasks.find(x => x.id === $('#sheet').dataset.tid);
+    if (t) { t.logs = t.logs || []; t.logs.push({ t: todayStr(), text: txt }); saveDB(); openDetail(t.id); toast('已记录'); }
+    return;
+  }
+  // 设置页
+  // —— 云端同步 ——
+  if (e.target.id === 'syConnect') {
+    const tk = ($('#syToken') || {}).value || '';
+    const pw = ($('#syPwd') || {}).value || '';
+    const gid = ($('#syGist') || {}).value || '';
+    if (!tk.trim()) { toast('请填写 GitHub Token'); return; }
+    if (!pw || pw.length < 6) { toast('同步密码至少 6 位'); return; }
+    DB.sync = { token: tk.trim(), pwd: pw, gistId: (gid || '').trim(), lastAt: (DB.sync && DB.sync.lastAt) || '' };
+    toast('正在连接…');
+    pushToCloud().then(function () { render(); toast('已连接并上传'); })
+      .catch(function (err) { saveDB(); render(); toast('失败：' + err.message); });
+    return;
+  }
+  if (e.target.id === 'syPush') {
+    toast('正在上传…');
+    pushToCloud().then(function () { render(); toast('已上传到云端'); })
+      .catch(function (err) { toast('失败：' + err.message); });
+    return;
+  }
+  if (e.target.id === 'syPull') {
+    if (DB.meta && DB.meta.dirty && !confirm('本地有未上传的修改，从云端恢复会覆盖它们。确定继续？')) return;
+    toast('正在读取…');
+    pullFromCloud().then(function (r) { render(); toast('已恢复 ' + r.count + ' 条任务'); })
+      .catch(function (err) { toast('失败：' + err.message); });
+    return;
+  }
+  if (e.target.id === 'syDisconnect') {
+    if (confirm('断开后本地数据保留，但不再同步。确定？')) {
+      DB.sync = null; saveDB(); render(); toast('已断开同步');
+    }
+    return;
+  }
+  if (e.target.id === 'briefCopy') {
+    const hide = ($('#hideName') || {}).checked;
+    copyText(buildBriefText(hide)).then(function () { toast('简报已复制，可直接粘贴到微信'); })
+      .catch(function () { toast('复制失败，请手动选择文本'); });
+    return;
+  }
+  if (e.target.id === 'briefView') {
+    const hide = ($('#hideName') || {}).checked;
+    const html = buildViewHTML(hide);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '工作安排-' + todayStr() + '.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('已导出只读看板，发给法官即可');
+    return;
+  }
+  if (e.target.id === 'backupNow') {
+    const okb = autoBackup(true);
+    render();
+    toast(okb ? '已生成备份' : '备份失败：存储空间不足');
+    return;
+  }
+  if (e.target.id === 'backupList') { openBackupList(); return; }
+  const rs = e.target.closest('[data-restore]');
+  if (rs) {
+    const bk = rs.dataset.restore;
+    if (confirm('恢复 ' + bk.slice(BACKUP_PREFIX.length) + ' 的备份？\n当前数据会被覆盖，建议先导出备份。')) {
+      const okr = restoreBackup(bk);
+      closeSheet(); render();
+      toast(okr ? '已恢复到该备份' : '恢复失败');
+    }
+    return;
+  }
+  if (e.target.id === 'holSync') {
+    const btn = e.target;
+    btn.textContent = '检查中…';
+    syncHolidays(true).then(function (r) {
+      render();
+      if (!r.ok) toast('联网获取失败，请检查网络或稍后再试');
+      else toast(r.added > 0 ? '已更新 ' + r.added + ' 天安排' : '已是最新，没有新增');
+    });
+    return;
+  }
+  if (e.target.id === 'expBtn') { exportJSON(); return; }
+  if (e.target.id === 'micGrant') {
+    ensureMic().then(function (ok) {
+      toast(ok ? '麦克风已授权，之后不再询问' : '授权未完成，请检查浏览器麦克风权限');
+      render();
+    });
+    return;
+  }
+  if (e.target.id === 'expCsvBtn') { exportCSV(); return; }
+  if (e.target.id === 'impBtn') { $('#impFile').click(); return; }
+  if (e.target.id === 'clearBtn') {
+    if (confirm('将清空全部任务数据，且无法恢复。确定继续？')) {
+      if (confirm('再次确认：所有任务与台账记录都会被删除，建议先导出备份。')) {
+        DB.tasks = []; DB.seq = { 保全: 1 }; saveDB(); render(); toast('已清空');
+      }
+    }
+    return;
+  }
+  if (e.target.id === 'addHoliday') {
+    const d = prompt('输入日期（格式 2027-01-01）：');
+    if (!d) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('日期格式不正确'); return; }
+    const n = prompt('节假日名称（如：元旦）：') || '节假日';
+    DB.holidays[d] = n; refreshCal(); saveDB(); render(); toast('已添加'); return;
+  }
+  const dh = e.target.closest('[data-delhol]');
+  if (dh) {
+    const d = dh.dataset.delhol;
+    if (confirm('删除 ' + d + ' ' + (DB.holidays[d] || '') + '？\n删除后自动更新不会再加回。')) {
+      delete DB.holidays[d];
+      DB.holidayDeleted = DB.holidayDeleted || [];
+      if (DB.holidayDeleted.indexOf(d) < 0) DB.holidayDeleted.push(d);
+      refreshCal(); saveDB(); render();
+    }
+    return;
+  }
+});
+
+// 输入绑定
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'q') {
+    q = el.value;
+    const tl = $('#taskList');
+    if (tl) tl.innerHTML = taskListHTML();
+    return;
+  }
+  if (el.id === 'nlpText') { AD.text = el.value; return; }
+  if (el.dataset.f) {
+    const k = el.dataset.f;
+    if (k === '__caseNo') AD.caseNo = el.value;
+    else if (k === '__caseName') AD.caseName = el.value;
+    else if (k === '__start') AD.start = el.value || todayStr();
+    else if (k === '__endDate') AD.endDate = el.value;
+    else if (k === '__needFix') AD.needFix = el.checked;
+    else if (k === '__customDays') AD.customDays = el.value === '' ? null : Number(el.value);
+    else if (k === '__absDue') AD.absDue = el.value;
+    else AD.extra[k] = el.value;
+    updatePreview(); return;
+  }
+  if (el.dataset.e) {
+    const t = DB.tasks.find(x => x.id === $('#sheet').dataset.tid);
+    if (t) {
+      if (el.dataset.e === 'customDays') t.customDays = el.value === '' ? null : Number(el.value);
+      else t[el.dataset.e] = el.value;
+      recalc(t); saveDB();
+    }
+    return;
+  }
+  if (el.dataset.x) {
+    const t = DB.tasks.find(x => x.id === $('#sheet').dataset.tid);
+    if (t) {
+      if (el.type === 'checkbox') t.extra[el.dataset.x] = el.checked;
+      else t.extra[el.dataset.x] = el.value;
+      recalc(t); saveDB();
+    }
+    return;
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'boardSel') { curBoard = e.target.value; render(); return; }
+  if (e.target.id === 'impFile') { importJSON(e.target.files[0]); e.target.value = ''; return; }
+  if (e.target.id === 'remindDay') { DB.remindDay = parseInt(e.target.value, 10); saveDB(); toast('已设置每周提醒日'); return; }
+});
+
+/* ========== 15. 节假日自动更新 ==========
+   数据源：holiday-cn（收录国务院办公厅原文，含放假与调休上班日）
+   启动时自动同步当前年及未来两年，24 小时内不重复请求 */
+const HOLIDAY_SYNC_KEY = 'fzr_holiday_sync_at';
+const HOLIDAY_FEEDS = [
+  function (y) { return 'https://cdn.jsdelivr.net/gh/NateScarlet/holiday-cn@master/' + y + '.json'; },
+  function (y) { return 'https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/' + y + '.json'; }
+];
+
+function mergeHolidayDays(days) {
+  let changed = 0;
+  const del = DB.holidayDeleted || [];
+  (days || []).forEach(function (d) {
+    if (!d || !d.date) return;
+    if (del.indexOf(d.date) >= 0) return;          // 用户手动删过的不再补回
+    if (d.isOffDay) {
+      if (!DB.holidays[d.date]) { DB.holidays[d.date] = d.name || '节假日'; changed++; }
+    } else {
+      if (DB.makeup.indexOf(d.date) < 0) { DB.makeup.push(d.date); changed++; }
+    }
+  });
+  return changed;
+}
+
+function fetchHolidayYear(year) {
+  let i = 0;
+  function tryNext() {
+    if (i >= HOLIDAY_FEEDS.length) return Promise.resolve(null);
+    const url = HOLIDAY_FEEDS[i++](year);
+    let req;
+    try { req = fetch(url, { cache: 'no-store' }); }
+    catch (e) { return tryNext(); }   // 无 fetch 能力（如离线包）直接换源/放弃
+    return req.then(function (r) {
+      if (!r.ok) return tryNext();
+      return r.json().then(function (d) {
+        if (!d || !Array.isArray(d.days)) return tryNext();
+        return d.days;
+      });
+    }).catch(function () { return tryNext(); });
+  }
+  return tryNext();
+}
+
+function syncHolidays(force) {
+  const nowY = new Date().getFullYear();
+  let last = 0;
+  try { last = parseInt(localStorage.getItem(HOLIDAY_SYNC_KEY) || '0', 10) || 0; } catch (e) { }
+  if (!force && last && (Date.now() - last) < 86400000) return Promise.resolve({ skipped: true, added: 0, ok: true });
+  const years = [nowY, nowY + 1, nowY + 2];
+  let added = 0, ok = false;
+  return years.reduce(function (p, y) {
+    return p.then(function () {
+      return fetchHolidayYear(y).then(function (days) {
+        if (days && days.length) { ok = true; added += mergeHolidayDays(days); }
+      });
+    });
+  }, Promise.resolve()).then(function () {
+    if (ok) {
+      refreshCal(); saveDB();
+      try { localStorage.setItem(HOLIDAY_SYNC_KEY, String(Date.now())); } catch (e) { }
+    }
+    return { added: added, ok: ok };
+  }).catch(function () { return { added: 0, ok: false }; });
+}
+
+function lastHolidaySyncText() {
+  let t = 0;
+  try { t = parseInt(localStorage.getItem(HOLIDAY_SYNC_KEY) || '0', 10) || 0; } catch (e) { }
+  if (!t) return '尚未联网更新';
+  const d = new Date(t);
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+/* ========== 16. 导入导出 ========== */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '法官助理工作台-备份-' + todayStr() + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('备份已导出');
+}
+function importJSON(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const o = JSON.parse(r.result);
+      if (!o.tasks || !Array.isArray(o.tasks)) throw new Error('格式不符');
+      if (!confirm('将用备份文件覆盖当前数据（' + DB.tasks.length + ' 条），确定导入？')) return;
+      DB = Object.assign(DB, o);
+      HOL = DB.holidays; MAKEUP = new Set(DB.makeup);
+      (DB.tasks || []).forEach(t => recalc(t));
+      saveDB(); render(); toast('导入成功，共 ' + DB.tasks.length + ' 条');
+    } catch (err) { alert('导入失败：文件格式不正确'); }
+  };
+  r.readAsText(file);
+}
+function exportCSV() {
+  let out = '\ufeff';
+  BOARDS.forEach(b => {
+    let rows = DB.tasks.filter(t => b.cats.includes(t.cat));
+    if (b.subs) rows = rows.filter(t => b.subs.includes(t.sub));
+    if (!rows.length) return;
+    out += b.name + '\n';
+    out += b.cols.map(c => '"' + c.l + '"').join(',') + '\n';
+    rows.forEach(t => { out += b.cols.map(c => '"' + String(cellVal(t, c)).replace(/"/g, '""') + '"').join(',') + '\n'; });
+    out += '\n';
+  });
+  const blob = new Blob([out], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '法官助理台账-' + todayStr() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('台账已导出');
+}
+
+/* ========== 16.5 多设备同步（GitHub Gist + AES-GCM 加密） ==========
+   上传前用同步密码加密，GitHub 上只有密文；密钥不离开本机 */
+const SYNC_FILE = 'fzr-data.enc';
+const SYNC_API = 'https://api.github.com';
+
+function cryptoReady() {
+  return typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined';
+}
+function b64enc(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+  return btoa(s);
+}
+function b64dec(s) {
+  const bin = atob(s);
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+function deriveKey(pwd, salt) {
+  const enc = new TextEncoder();
+  return crypto.subtle.importKey('raw', enc.encode(pwd), { name: 'PBKDF2' }, false, ['deriveKey'])
+    .then(function (base) {
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: salt, iterations: 120000, hash: 'SHA-256' },
+        base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+}
+function encryptText(text, pwd) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  return deriveKey(pwd, salt).then(function (key) {
+    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(text));
+  }).then(function (ct) {
+    return 'v1.' + b64enc(salt) + '.' + b64enc(iv) + '.' + b64enc(new Uint8Array(ct));
+  });
+}
+function decryptText(payload, pwd) {
+  const p = String(payload || '').trim().split('.');
+  if (p[0] !== 'v1' || p.length !== 4) return Promise.reject(new Error('云端数据格式不符'));
+  const salt = b64dec(p[1]), iv = b64dec(p[2]), ct = b64dec(p[3]);
+  return deriveKey(pwd, salt).then(function (key) {
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ct);
+  }).then(function (pt) {
+    return new TextDecoder().decode(pt);
+  });
+}
+function ghApi(path, method, body) {
+  const s = DB.sync || {};
+  if (!s.token) return Promise.reject(new Error('未填写 GitHub Token'));
+  return fetch(SYNC_API + path, {
+    method: method || 'GET',
+    headers: {
+      'Authorization': 'token ' + s.token,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function (r) {
+    if (!r.ok) {
+      return r.json().catch(function () { return {}; }).then(function (e) {
+        throw new Error(e.message || ('HTTP ' + r.status));
+      });
+    }
+    return r.json();
+  });
+}
+function syncPayload() {
+  const data = {
+    tasks: DB.tasks, holidays: DB.holidays, makeup: DB.makeup, seq: DB.seq,
+    remindDay: DB.remindDay, holidayDeleted: DB.holidayDeleted, v: 2,
+    exportedAt: new Date().toISOString()
+  };
+  return JSON.stringify(data);
+}
+function applyPayload(text) {
+  const o = JSON.parse(text);
+  if (!o || !Array.isArray(o.tasks)) throw new Error('云端数据不完整');
+  DB.tasks = o.tasks;
+  if (o.holidays) DB.holidays = o.holidays;
+  if (o.makeup) DB.makeup = o.makeup;
+  if (o.seq) DB.seq = o.seq;
+  if (typeof o.remindDay === 'number') DB.remindDay = o.remindDay;
+  if (Array.isArray(o.holidayDeleted)) DB.holidayDeleted = o.holidayDeleted;
+  HOL = DB.holidays; MAKEUP = new Set(DB.makeup);
+  (DB.tasks || []).forEach(function (t) { recalc(t); });
+  DB.meta.dirty = false;
+}
+function pushToCloud() {
+  const s = DB.sync;
+  if (!s.token) return Promise.reject(new Error('未填写 GitHub Token'));
+  if (!s.pwd) return Promise.reject(new Error('未设置同步密码'));
+  return encryptText(syncPayload(), s.pwd).then(function (payload) {
+    const files = {};
+    files[SYNC_FILE] = { content: payload };
+    if (s.gistId) {
+      return ghApi('/gists/' + s.gistId, 'PATCH', { files: files });
+    }
+    return ghApi('/gists', 'POST', {
+      description: '法官助理工作台数据（加密）', public: false, files: files
+    }).then(function (g) { s.gistId = g.id; });
+  }).then(function () {
+    s.lastAt = new Date().toISOString();
+    DB.meta.dirty = false;
+    saveDB(true);
+    return { ok: true };
+  });
+}
+function pullFromCloud() {
+  const s = DB.sync;
+  if (!s.token) return Promise.reject(new Error('未填写 GitHub Token'));
+  if (!s.gistId) return Promise.reject(new Error('尚未创建云端档案'));
+  if (!s.pwd) return Promise.reject(new Error('未设置同步密码'));
+  return ghApi('/gists/' + s.gistId).then(function (g) {
+    const f = g.files && g.files[SYNC_FILE];
+    if (!f) throw new Error('云端档案里没有数据文件');
+    const content = f.content || (f.truncated && f.raw_url ? null : '');
+    if (content) return content;
+    return fetch(f.raw_url).then(function (r) { return r.text(); });
+  }).then(function (payload) {
+    return decryptText(payload, s.pwd);
+  }).then(function (text) {
+    applyPayload(text);
+    s.lastAt = new Date().toISOString();
+    saveDB(true);
+    return { ok: true, count: DB.tasks.length };
+  });
+}
+
+/* ========== 16.8 给法官看：简报与只读看板 ========== */
+function maskName(s) {
+  if (!s) return '';
+  return String(s).split(/(诉|vs|VS)/).map(function (p) {
+    if (/^(诉|vs|VS)$/.test(p)) return '诉';
+    if (p.length <= 1) return p;
+    if (p.length === 2) return p[0] + '*';
+    return p[0] + '*'.repeat(p.length - 2) + p[p.length - 1];
+  }).join('');
+}
+
+function briefGroups() {
+  const all = DB.tasks.filter(function (t) { return t.status !== 'done'; });
+  const td = todayStr();
+  return {
+    over: sortByState(all.filter(function (t) { return stateOf(t) === 'overdue'; })),
+    today: sortByState(all.filter(function (t) { return stateOf(t) === 'today'; })),
+    soon: sortByState(all.filter(function (t) { return stateOf(t) === 'soon'; })),
+    week: sortByState(all.filter(function (t) {
+      const d = minDue(t); if (!d) return false;
+      const n = diffDays(d, td); return n > 3 && n <= 7;
+    }))
+  };
+}
+
+function briefLine(t, hide) {
+  const nx = nextStep(t), d = minDue(t);
+  const nm = hide ? maskName(t.caseName) : (t.caseName || '');
+  return '· ' + (t.caseNo || '未填案号') + (nm ? '　' + nm : '') +
+    '　' + (nx ? nx.n : '') + (d ? '（' + fmtCN(d) + '）' : '');
+}
+
+function buildBriefText(hide) {
+  const g = briefGroups();
+  const d = new Date();
+  let s = '【工作安排】' + d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + WEEKCN[d.getDay()] + '\n';
+  if (g.over.length) {
+    s += '\n■ 已逾期（' + g.over.length + '）\n' + g.over.map(function (t) { return briefLine(t, hide); }).join('\n') + '\n';
+  }
+  s += '\n■ 今日应办（' + g.today.length + '）\n' + (g.today.length ? g.today.map(function (t) { return briefLine(t, hide); }).join('\n') : '· 无') + '\n';
+  if (g.soon.length) s += '\n■ 3日内（' + g.soon.length + '）\n' + g.soon.map(function (t) { return briefLine(t, hide); }).join('\n') + '\n';
+  if (g.week.length) s += '\n■ 本周内（' + g.week.length + '）\n' + g.week.map(function (t) { return briefLine(t, hide); }).join('\n') + '\n';
+  s += '\n（本简报由工作台自动生成）';
+  return s;
+}
+
+function buildViewHTML(hide) {
+  const g = briefGroups();
+  const now = new Date();
+  const dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 周' + WEEKCN[now.getDay()];
+  function rows(list) {
+    if (!list.length) return '<tr><td colspan="4" class="none">无</td></tr>';
+    return list.map(function (t) {
+      const nx = nextStep(t), d = minDue(t);
+      const nm = hide ? maskName(t.caseName) : (t.caseName || '');
+      const n = d ? diffDays(d, todayStr()) : null;
+      const cls = n === null ? '' : (n < 0 ? 'od' : n === 0 ? 'td' : '');
+      return '<tr class="' + cls + '"><td>' + esc(t.caseNo || '—') + '</td><td>' + esc(nm) + '</td><td>' + esc(nx ? nx.n : '') + '</td><td>' + (d ? esc(fmtCN(d)) + (n !== null && n < 0 ? '（逾期' + (-n) + '天）' : n === 0 ? '（今日）' : '') : '—') + '</td></tr>';
+    }).join('');
+  }
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>工作安排 · ' + dateStr + '</title><style>' +
+    'body{margin:0;padding:18px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f2f4f7;color:#1d2733;line-height:1.6}' +
+    '.wrap{max-width:760px;margin:0 auto}h1{font-size:19px;margin:0 0 4px}.sub{color:#6b7787;font-size:13px;margin-bottom:16px}' +
+    'h2{font-size:14px;margin:20px 0 8px;color:#1b3a5c}h2 span{color:#c62f2f;font-weight:400;font-size:12px}' +
+    'table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.05)}' +
+    'th{background:#eef1f6;text-align:left;padding:9px 11px;font-size:12px;color:#44536a;font-weight:600;white-space:nowrap}' +
+    'td{padding:9px 11px;border-top:1px solid #eef1f5;vertical-align:top}td:first-child{font-weight:600;white-space:nowrap}' +
+    'tr.od td{background:#fdf3f3}tr.td td{background:#fffaf0}.none{color:#9aa5b3;text-align:center}' +
+    '.foot{margin-top:22px;font-size:12px;color:#9aa5b3;text-align:center}' +
+    '.box{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:13px;color:#44536a}' +
+    '</style></head><body><div class="wrap">' +
+    '<h1>工作安排</h1><div class="sub">' + dateStr + ' · 共 ' + (g.over.length + g.today.length + g.soon.length + g.week.length) + ' 项待办</div>' +
+    (g.over.length ? '<h2>已逾期 <span>' + g.over.length + ' 项</span></h2><table><tr><th>案号</th><th>当事人</th><th>当前环节</th><th>期限</th></tr>' + rows(g.over) + '</table>' : '') +
+    '<h2>今日应办 <span>' + g.today.length + ' 项</span></h2><table><tr><th>案号</th><th>当事人</th><th>当前环节</th><th>期限</th></tr>' + rows(g.today) + '</table>' +
+    (g.soon.length ? '<h2>3日内 <span>' + g.soon.length + ' 项</span></h2><table><tr><th>案号</th><th>当事人</th><th>当前环节</th><th>期限</th></tr>' + rows(g.soon) + '</table>' : '') +
+    (g.week.length ? '<h2>本周内 <span>' + g.week.length + ' 项</span></h2><table><tr><th>案号</th><th>当事人</th><th>当前环节</th><th>期限</th></tr>' + rows(g.week) + '</table>' : '') +
+    '<div class="foot">生成时间：' + esc(now.toISOString().replace('T', ' ').slice(0, 16)) + ' · 只读快照</div>' +
+    '</div></body></html>';
+}
+
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise(function (res, rej) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); res(); } catch (e) { rej(e); }
+    document.body.removeChild(ta);
+  });
+}
+
+/* ========== 17. 启动 ========== */
+loadDB();
+if (DB.tasks.length) autoBackup(false);   // 每天首次打开自动存一份
+refreshCal();
+render();
+// 首次打开 3 秒后静默同步节假日（24 小时内不重复）
+setTimeout(function () {
+  syncHolidays(false).then(function (r) {
+    if (r && r.added > 0) { render(); toast('已自动更新 ' + r.added + ' 天节假日安排'); }
+  }).catch(function () { });
+}, 3000);
+// 每日零点前后刷新日期
+setInterval(() => {
+  const d = $('#hDate'); if (!d) return;
+  const now = new Date();
+  const s = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日';
+  if (d.textContent !== s) render();
+}, 60000);
+
+</script>
+</body>
+</html>
